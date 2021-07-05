@@ -5,7 +5,7 @@ module.exports = {
   name: 'Zoho CRM Download Attachment',
   description: 'Downloads an attachment from Zoho CRM based on the attachment id and saves it in the /tmp/ directory. Returns the file path of the saved file for later use.',
   key: 'zoho_crm_download_attachment',
-  version: '0.2.5',
+  version: '1.0.0',
   type: 'action',
   props: {
     zoho_crm: {
