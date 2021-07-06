@@ -2,10 +2,10 @@ const fs = require('fs')
 const axios = require('axios')
 
 module.exports = {
-  name: 'Zoho CRM Download Attachment',
+  name: 'Download Attachment',
   description: 'Downloads an attachment from Zoho CRM based on the attachment id and saves it in the /tmp/ directory. Returns the file path of the saved file for later use.',
-  key: 'zoho_crm_download_attachment',
-  version: '1.0.0',
+  key: 'zoho_crm-download-attachment',
+  version: '1.0.1',
   type: 'action',
   props: {
     zoho_crm: {
