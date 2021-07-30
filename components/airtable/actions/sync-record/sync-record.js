@@ -1,15 +1,14 @@
-const airtable = require("../../airtable.app.js");
-
-const DEAL_TRACKER_BASE_ID = 'appquN7zlOyyK8sMF'
+const airtable = require("../../airtable.app.js")
+const common = require("../common.js")
 
 module.exports = {
+	key: 'sync_record',
 	name: 'Sync Record',
 	description: 'Update or create a record as needed to sync with an external source.',
-	key: 'sync_record',
-	version: '0.0.1',
+	version: '0.0.3',
 	type: 'action',
 	props: {
-		airtable,
+    ...common.props,
 		source_record : {
 			type: 'object',
 			label: 'Source Record',
@@ -17,7 +16,7 @@ module.exports = {
 	},
 	methods: {
 		table(){
-			return this.airtable.base(DEAL_TRACKER_BASE_ID)('Accounts')
+			return this.airtable.base(this.baseId)(this.tableId)
 		},
 		async checkForExistingRecord(entity_type, entity_id){
 			const config = {
