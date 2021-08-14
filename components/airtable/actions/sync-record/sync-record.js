@@ -4,15 +4,27 @@ const common = require("../common.js")
 module.exports = {
 	key: 'sync_record',
 	name: 'Sync Record',
-	description: 'Update or create a record as needed to sync with an external source.',
-	version: '0.0.3',
+	description: 'Updates a record in Airtable to sync it with a record from an external source. ' + 
+	'If no existing Airtable record matches the source record, a new Airtable record will be created. ' + 
+	'In either case, the matching record will be returned.',
+	version: '0.0.22',
 	type: 'action',
 	props: {
     ...common.props,
 		source_record : {
 			type: 'object',
 			label: 'Source Record',
-		}
+		},
+		match_criteria: {
+      propDefinition: [
+        airtable,
+        "filterByFormula",
+      ],
+      label: 'Target Record Match Criteria',
+      description: 'Enter an [Airtable formula](https://support.airtable.com/hc/en-us/articles/203255215-Formula-Field-Reference) ' + 
+      'to determine whether a given Airtable record in the selected *Base* and *Table* is a match for the *Source Record* indicated above. \n' + 
+      'Example: `{Third Party ID} = \'{{steps.source_record.id}}\'`'
+    },
 	},
 	methods: {
 		table(){
@@ -20,7 +32,7 @@ module.exports = {
 		},
 		async checkForExistingRecord(entity_type, entity_id){
 			const config = {
-				filterByFormula: `{QB ${entity_type} ID} = ${entity_id}`,
+				filterByFormula: this.match_criteria,
 			}
 			const data = []
 			await this.table().select(config).eachPage((records, fetchNextPage) => {
