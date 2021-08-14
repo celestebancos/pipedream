@@ -20,10 +20,10 @@ module.exports = {
         airtable,
         "filterByFormula",
       ],
-      label: 'Target Record Match Criteria',
-      description: 'Enter an [Airtable formula](https://support.airtable.com/hc/en-us/articles/203255215-Formula-Field-Reference) ' + 
-      'to determine whether a given Airtable record in the selected *Base* and *Table* is a match for the *Source Record* indicated above. \n' + 
-      'Example: `{Third Party ID} = \'{{steps.source_record.id}}\'`'
+      label: "Target Record Match Criteria",
+      description: "Enter an [Airtable formula](https://support.airtable.com/hc/en-us/articles/203255215-Formula-Field-Reference) " + 
+      "to determine whether a given Airtable record in the selected *Base* and *Table* is a match for the *Source Record* indicated above. \n" + 
+      "Example: `{Third Party ID} = '{{steps.source_record.id}}'`"
     },
 	},
 	methods: {
