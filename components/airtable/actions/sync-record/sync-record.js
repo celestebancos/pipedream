@@ -7,14 +7,10 @@ module.exports = {
 	description: 'Updates a record in Airtable to sync it with a record from an external source. ' + 
 	'If no existing Airtable record matches the source record, a new Airtable record will be created. ' + 
 	'In either case, the matching record will be returned.',
-	version: '0.0.25',
+	version: '0.0.26',
 	type: 'action',
 	props: {
     ...common.props,
-		source_record : {
-			type: 'object',
-			label: 'Source Record',
-		},
 		match_criteria: {
       propDefinition: [
         airtable,
@@ -24,6 +20,13 @@ module.exports = {
       description: "Enter an [Airtable formula](https://support.airtable.com/hc/en-us/articles/203255215-Formula-Field-Reference) " + 
       "to determine whether a given Airtable record in the selected *Base* and *Table* is a match for the *Source Record* indicated above. \n" + 
       "Example: `{Third Party ID} = '{{steps.source_record.id}}'`"
+    },
+    record: {
+    	propDefinition: [
+	    	airtable,
+	    	'record'
+    	],
+    	label: 'Fields to Sync',
     },
 	},
 	methods: {
@@ -44,10 +47,6 @@ module.exports = {
 			const first_matching_record = data[0]
 			return first_matching_record
 		},
-		async createNewRecord(fields){
-			const airtable_record = await this.table().create(fields)
-			return airtable_record
-		}
 	},
 	async run(){
 		const existing_record = await this.checkForExistingRecord(this.match_criteria)
@@ -56,14 +55,8 @@ module.exports = {
 			return existing_record
 		} else {
 			//create new record
-			const source = this.source_record
-			const fields = {
-				'Name': source.DisplayName,
-				'QB Customer Name': source.DisplayName,
-				'QB Customer ID': source.Id,
-			}
-			const new_record = await this.createNewRecord(fields)
-			return new_record
+			const airtable_record = await this.table().create(this.record)
+			return airtable_record
 		}
 	},
 }
