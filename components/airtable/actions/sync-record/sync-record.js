@@ -7,7 +7,7 @@ module.exports = {
 	description: 'Updates a record in Airtable to sync it with a record from an external source. ' + 
 	'If no existing Airtable record matches the source record, a new Airtable record will be created. ' + 
 	'In either case, the matching record will be returned.',
-	version: '0.0.41',
+	version: '0.1.3',
 	type: 'action',
 	props: {
 		...common.props,
@@ -28,6 +28,16 @@ module.exports = {
 			],
 			label: 'Fields to Sync',
 		},
+		ignored_fields: {
+			type: 'string[]',
+			label: 'Fields to Ignore on Update',
+			description: 'Select any fields you wish to ignore when updating an existing record. The update will not overwrite the selected fields.',
+			async options(){
+				return Object.keys(this.record)
+			},
+			optional: true,
+			default: [],
+		}
 	},
 	methods: {
 		table(){
@@ -57,6 +67,12 @@ module.exports = {
 			if(existing_records.length > 1){
 				throw new Error (`Multiple matches for ${this.match_criteria} (${existing_records.length} matches found)`)
 			} else {
+				//remove any fields that were selected to be ignored on update
+				for (const field in this.record){
+					if(this.ignored_fields.includes(field)){
+						delete this.record[field]
+					}
+				}
 				const updated_record = await this.updateExistingRecord(existing_records[0].id, this.record)
 				return updated_record
 			}
