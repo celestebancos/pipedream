@@ -7,7 +7,7 @@ module.exports = {
 	description: 'Updates a record in Airtable to sync it with a record from an external source. ' + 
 	'If no existing Airtable record matches the source record, a new Airtable record will be created. ' + 
 	'In either case, the matching record will be returned.',
-	version: '0.1.3',
+	version: '0.2.0',
 	type: 'action',
 	props: {
 		...common.props,
@@ -58,27 +58,27 @@ module.exports = {
 		},
 		async updateExistingRecord(id, fields){
 			const response = await this.table().update([{id,fields}])
-			return response[0]._rawJson
+			return response[0]
 		}
 	},
 	async run(){
 		const existing_records = await this.checkForExistingRecords(this.match_criteria)
-		if(existing_records){
-			if(existing_records.length > 1){
-				throw new Error (`Multiple matches for ${this.match_criteria} (${existing_records.length} matches found)`)
-			} else {
-				//remove any fields that were selected to be ignored on update
-				for (const field in this.record){
-					if(this.ignored_fields.includes(field)){
-						delete this.record[field]
-					}
-				}
-				const updated_record = await this.updateExistingRecord(existing_records[0].id, this.record)
-				return updated_record
-			}
-		} else {
+		if(!existing_records || existing_records.length === 0){
+			//create new record if none are found
 			const new_record = await this.table().create(this.record)
-			return new_record
+			return new_record._rawJson
+		} else if(existing_records.length === 1){
+			//update existing record after removing any fields that were selected to be ignored on update
+			for (const field in this.record){
+				if(this.ignored_fields.includes(field)){
+					delete this.record[field]
+				}
+			}
+			const updated_record = await this.updateExistingRecord(existing_records[0].id, this.record)
+			return updated_record
+		} else {
+			//throw an error if more than one existing record is found
+			throw new Error (`Multiple matches for ${this.match_criteria} (${existing_records.length} matches found)`)
 		}
 	},
 }
