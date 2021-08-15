@@ -7,7 +7,7 @@ module.exports = {
 	description: 'Updates a record in Airtable to sync it with a record from an external source. ' + 
 	'If no existing Airtable record matches the source record, a new Airtable record will be created. ' + 
 	'In either case, the matching record will be returned.',
-	version: '0.0.26',
+	version: '0.0.30',
 	type: 'action',
 	props: {
     ...common.props,
@@ -33,26 +33,25 @@ module.exports = {
 		table(){
 			return this.airtable.base(this.baseId)(this.tableId)
 		},
-		async checkForExistingRecord(filterByFormula){
+		async checkForExistingRecords(filterByFormula){
 			const config = {
 				filterByFormula,
 			}
-			const data = []
+			const matching_records = []
 			await this.table().select(config).eachPage((records, fetchNextPage) => {
 				records.forEach(record => {
-					data.push(record._rawJson)
+					matching_records.push(record._rawJson)
 				})
 				fetchNextPage()
 			})
-			const first_matching_record = data[0]
-			return first_matching_record
+			return matching_records
 		},
 	},
 	async run(){
-		const existing_record = await this.checkForExistingRecord(this.match_criteria)
-		if(existing_record){
+		const existing_records = await this.checkForExistingRecords(this.match_criteria)
+		if(existing_records){
 			//update existing record?
-			return existing_record
+			return existing_records[0]
 		} else {
 			//create new record
 			const airtable_record = await this.table().create(this.record)
