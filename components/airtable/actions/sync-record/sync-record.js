@@ -7,7 +7,7 @@ module.exports = {
 	description: 'Updates a record in Airtable to sync it with a record from an external source. ' + 
 	'If no existing Airtable record matches the source record, a new Airtable record will be created. ' + 
 	'In either case, the matching record will be returned.',
-	version: '0.0.30',
+	version: '0.0.33',
 	type: 'action',
 	props: {
 		...common.props,
@@ -50,8 +50,12 @@ module.exports = {
 	async run(){
 		const existing_records = await this.checkForExistingRecords(this.match_criteria)
 		if(existing_records){
-			//update existing record?
-			return existing_records[0]
+			if(existing_records.length > 1){
+				throw new Error (`Multiple matches (${existing_records.length} total) found for ${this.match_criteria}`)
+			} else {
+				//update existing record here?
+				return existing_records[0]
+			}
 		} else {
 			//create new record
 			const airtable_record = await this.table().create(this.record)
