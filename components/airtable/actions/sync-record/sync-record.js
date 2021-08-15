@@ -7,7 +7,7 @@ module.exports = {
 	description: 'Updates a record in Airtable to sync it with a record from an external source. ' + 
 	'If no existing Airtable record matches the source record, a new Airtable record will be created. ' + 
 	'In either case, the matching record will be returned.',
-	version: '0.2.0',
+	version: '0.2.1',
 	type: 'action',
 	props: {
 		...common.props,
