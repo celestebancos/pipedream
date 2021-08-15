@@ -10,24 +10,24 @@ module.exports = {
 	version: '0.0.30',
 	type: 'action',
 	props: {
-    ...common.props,
+		...common.props,
 		match_criteria: {
-      propDefinition: [
-        airtable,
-        "filterByFormula",
-      ],
-      label: "Target Record Match Criteria",
-      description: "Enter an [Airtable formula](https://support.airtable.com/hc/en-us/articles/203255215-Formula-Field-Reference) " + 
-      "to determine whether a given Airtable record in the selected *Base* and *Table* is a match for the *Source Record* indicated above. \n" + 
-      "Example: `{Third Party ID} = '{{steps.source_record.id}}'`"
-    },
-    record: {
-    	propDefinition: [
-	    	airtable,
-	    	'record'
-    	],
-    	label: 'Fields to Sync',
-    },
+			propDefinition: [
+				airtable,
+				"filterByFormula",
+			],
+			label: "Target Record Match Criteria",
+			description: "Enter an [Airtable formula](https://support.airtable.com/hc/en-us/articles/203255215-Formula-Field-Reference) " + 
+			"to determine whether a given Airtable record in the selected *Base* and *Table* is a match for the *Source Record* indicated above. \n" + 
+			"Example: `{Third Party ID} = '{{steps.source_record.id}}'`"
+		},
+		record: {
+			propDefinition: [
+				airtable,
+				'record'
+			],
+			label: 'Fields to Sync',
+		},
 	},
 	methods: {
 		table(){
