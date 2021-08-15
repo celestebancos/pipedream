@@ -58,7 +58,7 @@ module.exports = {
 		},
 		async updateExistingRecord(id, fields){
 			const response = await this.table().update([{id,fields}])
-			return response[0]
+			return response[0]._rawJson
 		}
 	},
 	async run(){
