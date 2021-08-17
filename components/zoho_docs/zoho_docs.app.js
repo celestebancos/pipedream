@@ -3,4 +3,4 @@ module.exports = {
   app: "zoho_docs",
   propDefinitions: {},
   methods: {},
-}
+};
