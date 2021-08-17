@@ -7,7 +7,7 @@ module.exports = {
 	name: 'Upload File',
 	description: 'Upload a file to the specified folder.',
 	key: 'upload_file',
-	version: '0.0.3',
+	version: '0.1.2',
 	type: 'action',
 	props: {
 		zoho_docs,
@@ -21,7 +21,8 @@ module.exports = {
 		},
 		file_name: {
 			type: 'string',
-			label: 'File Name',
+			label: 'File Name (Optional)',
+			optional: true,
 		},
 	},
 	methods: {
@@ -50,6 +51,7 @@ module.exports = {
 }
 	},
 	async run(){
-		return await this.uploadFile(this.folder_id, this.file_path, this.file_name)
+		const file_name = this.file_name || this.file_path.replace ('/tmp/', '')
+		return await this.uploadFile(this.folder_id, this.file_path, file_name)
 	},
 }
