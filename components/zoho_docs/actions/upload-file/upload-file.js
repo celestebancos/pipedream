@@ -7,13 +7,27 @@ module.exports = {
   name: "Upload File",
   description: "Upload a file to the specified folder.",
   key: "upload_file",
-  version: "0.1.12",
+  version: "0.2.16",
   type: "action",
   props: {
     zohoDocs,
     folderID: {
       type: "string",
-      label: "Folder ID",
+      label: "Folder",
+      description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly.",
+      async options(){
+        const folders = (await this.getFolders()).map(folder => {
+          return {
+            label: ' > ' + folder[0].FOLDER_NAME,
+            value: folder[0].FOLDER_ID,
+          }
+        })
+        // Zoho Docs API defaults to the root folder if no ID is submitted (i.e. value === null)
+        const root_folder = {label: 'Zoho Docs', value: null}
+        // Add the root folder as the first option before all the folders from getFolders()
+        const options = [root_folder, ...folders]
+        return options
+      },
     },
     filePath: {
       type: "string",
@@ -26,6 +40,20 @@ module.exports = {
     },
   },
   methods: {
+    async getFolders(folderid){
+      const {data} = await axios({
+        method: "get",
+        url: "https://apidocs.zoho.com/files/v1/folders",
+        headers: {
+          "Authorization": `Zoho-oauthtoken ${this.zohoDocs.$auth.oauth_access_token}`,
+        },
+        params: {
+          folderid,
+        },
+      })
+      const [folderInfo, ...folders] = data
+      return folders
+    },
     async uploadFile(folderID, filePath, fileName) {
       try {
         const data = new FormData();
