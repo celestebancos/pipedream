@@ -7,7 +7,7 @@ module.exports = {
   name: "Upload File",
   description: "Upload a file to the specified folder.",
   key: "upload_file",
-  version: "0.2.41",
+  version: "0.2.42",
   type: "action",
   props: {
     zohoDocs,
@@ -21,7 +21,7 @@ module.exports = {
           options: folders.map(folder => folder.FOLDER_NAME || folder.FOLDERNAME), 
           // options: [`${JSON.stringify(folders)}`],
           context: {
-            nextPageToken: folders[0].FOLDER_ID || folders[0].FOLDERID,
+            nextPageToken: folders[0] ? (folders[0].FOLDER_ID || folders[0].FOLDERID) : prevContext.nextPageToken,
           },
         }
         // const folders = (await this.getFolders()).map(folder => {
