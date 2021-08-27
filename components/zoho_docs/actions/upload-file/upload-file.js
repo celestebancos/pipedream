@@ -7,7 +7,7 @@ module.exports = {
   name: "Upload File",
   description: "Upload a file to the specified folder.",
   key: "upload_file",
-  version: "0.2.42",
+  version: "0.2.44",
   type: "action",
   props: {
     zohoDocs,
@@ -16,13 +16,12 @@ module.exports = {
       label: "Folder",
       description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly.",
       async options({prevContext}){
-        const folders = await this.getSubfolders(prevContext.nextPageToken)
+        const folders = await this.getSubfolders(prevContext.parent_folder_id)
+        const options = folders.map(folder => folder.FOLDER_NAME ?? folder.FOLDERNAME)
+        const next_folder_id = folders[0] ? (folders[0].FOLDER_ID ?? folders[0].FOLDERID) : prevContext.parent_folder_id
         return {
-          options: folders.map(folder => folder.FOLDER_NAME || folder.FOLDERNAME), 
-          // options: [`${JSON.stringify(folders)}`],
-          context: {
-            nextPageToken: folders[0] ? (folders[0].FOLDER_ID || folders[0].FOLDERID) : prevContext.nextPageToken,
-          },
+          options,
+          context: {parent_folder_id: next_folder_id},
         }
         // const folders = (await this.getFolders()).map(folder => {
         //   return {
@@ -48,7 +47,7 @@ module.exports = {
     },
   },
   methods: {
-    async getSubfolders(folderid){
+    async getSubfolders(parent_folder_id){
       const {data} = await axios({
         method: "get",
         url: "https://apidocs.zoho.com/files/v1/folders",
@@ -56,7 +55,7 @@ module.exports = {
           "Authorization": `Zoho-oauthtoken ${this.zohoDocs.$auth.oauth_access_token}`,
         },
         params: {
-          folderid,
+          folderid: parent_folder_id,
         },
       })
       if(data.FOLDER){
@@ -65,7 +64,7 @@ module.exports = {
         const [folderInfo, ...folders] = data
         return folders.map(folder => folder[0])
       } else {
-        throw new Error(`Folder ID: ${folderid} Data: ${JSON.stringify(data)}`)
+        throw new Error(`Folder ID: ${parent_folder_id} Data: ${JSON.stringify(data)}`)
       }
     },
     async uploadFile(folderID, filePath, fileName) {
