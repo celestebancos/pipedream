@@ -7,7 +7,7 @@ module.exports = {
   name: "Upload File",
   description: "Upload a file to the specified folder.",
   key: "upload_file",
-  version: "0.2.44",
+  version: "0.2.46",
   type: "action",
   props: {
     zohoDocs,
@@ -17,8 +17,8 @@ module.exports = {
       description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly.",
       async options({prevContext}){
         const folders = await this.getSubfolders(prevContext.parent_folder_id)
-        const options = folders.map(folder => folder.FOLDER_NAME ?? folder.FOLDERNAME)
-        const next_folder_id = folders[0] ? (folders[0].FOLDER_ID ?? folders[0].FOLDERID) : prevContext.parent_folder_id
+        const options = folders.map(folder => folder.FOLDER_NAME || folder.FOLDERNAME)
+        const next_folder_id = folders[0] ? (folders[0].FOLDER_ID || folders[0].FOLDERID) : prevContext.parent_folder_id
         return {
           options,
           context: {parent_folder_id: next_folder_id},
