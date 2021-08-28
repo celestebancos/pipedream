@@ -7,7 +7,7 @@ module.exports = {
   name: "Upload File",
   description: "Upload a file to the specified folder.",
   key: "upload_file",
-  version: "0.4.7",
+  version: "0.4.33",
   type: "action",
   props: {
     zohoDocs,
@@ -16,42 +16,42 @@ module.exports = {
       label: "Folder",
       description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly.",
       async options({prevContext}){
-        const unchecked_folder_ids = prevContext.unchecked_folder_ids || []
-        let folder_id_to_check = unchecked_folder_ids.shift()
-        let folders = await this.getSubfolders(folder_id_to_check)
+        const getFolders = this.getFolders
+        const options = []
 
-        while(folders.length === 0 && unchecked_folder_ids.length > 0){
-          folder_id_to_check = unchecked_folder_ids.shift()
-          folders = await this.getSubfolders(folder_id_to_check)
-        }
-
-        const options = folders.map(folder => {
-          return {
-            label: ' > ' + getName(folder),
-            value: getId(folder),
-          }
-        })
-
-        //add the root folder as the first option
-        if(!prevContext.parent_folder_id){
+        // Put the root folder in as the first option on the dropdown
+        // and set it as the first parent folder to use when getting subfolders
+        if(prevContext.parent_folders === undefined){
           const root_folder = {label: 'Zoho Docs', value: null}
-          options.unshift(root_folder)
+          prevContext.parent_folders = [root_folder]
+          options.push(root_folder)
         }
 
-        const subfolder_ids = folders.map(folder => getId(folder))
-        const more_unchecked_folder_ids = unchecked_folder_ids.concat(subfolder_ids)
+        // Get subfolders for each item in the list of parent folders and convert them all to options
+        const pending_option_lists = prevContext.parent_folders.map(folder => getOptions(folder))
+        const new_options = (await Promise.all(pending_option_lists)).flat()
+        options.push(...new_options)
 
+        // Return the new options and use them as the list of parent folders next time
         return {
           options,
-          context: {unchecked_folder_ids: more_unchecked_folder_ids},
+          context: {parent_folders: new_options}
         }
 
-        //Zoho Docs uses different property names depending on whether the folder is top-level or not
-        function getName(folder){
-          return folder.FOLDERNAME || folder.FOLDER_NAME
+        // Call the Zoho Docs API to get a list of folders inside each parent folder
+        // and convert them all to options
+        async function getOptions(parent_folder){
+          const folders = await getFolders(parent_folder.value)
+          const options = folders.map(folder => convertToOption(folder, parent_folder.label))
+          return options
         }
-        function getId(folder){
-          return folder.FOLDERID || folder.FOLDER_ID
+
+        // Convert a folder object returned by the Zoho Docs API into a label/value option object
+        function convertToOption(folder, parent_name){
+          return {
+            label: parent_name  + ' > ' + folder.FOLDER_NAME,
+            value: folder.FOLDER_ID,
+          }
         }
       },
     },
@@ -66,7 +66,7 @@ module.exports = {
     },
   },
   methods: {
-    async getSubfolders(parent_folder_id){
+    async getFolders(parent_folder_id){
       const {data} = await axios({
         method: "get",
         url: "https://apidocs.zoho.com/files/v1/folders",
