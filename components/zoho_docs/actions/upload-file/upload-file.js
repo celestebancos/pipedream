@@ -7,7 +7,7 @@ module.exports = {
   name: "Upload File",
   description: "Upload a file to the specified folder.",
   key: "upload_file",
-  version: "0.2.46",
+  version: "0.3.6",
   type: "action",
   props: {
     zohoDocs,
@@ -17,23 +17,32 @@ module.exports = {
       description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly.",
       async options({prevContext}){
         const folders = await this.getSubfolders(prevContext.parent_folder_id)
-        const options = folders.map(folder => folder.FOLDER_NAME || folder.FOLDERNAME)
-        const next_folder_id = folders[0] ? (folders[0].FOLDER_ID || folders[0].FOLDERID) : prevContext.parent_folder_id
+        const options = folders.map(folder => {
+          return {
+            label: ' > ' + getName(folder),
+            value: getId(folder),
+          }
+        })
+
+        //add the root folder as the first option
+        if(!prevContext.parent_folder_id){
+          const root_folder = {label: 'Zoho Docs', value: null}
+          options.unshift(root_folder)
+        }
+
+        const next_folder_id = folders[0] ? getId(folders[0]) : prevContext.parent_folder_id
         return {
           options,
           context: {parent_folder_id: next_folder_id},
         }
-        // const folders = (await this.getFolders()).map(folder => {
-        //   return {
-        //     label: ' > ' + folder[0].FOLDER_NAME,
-        //     value: folder[0].FOLDER_ID,
-        //   }
-        // })
-        // // Zoho Docs API defaults to the root folder if no ID is submitted (i.e. value === null)
-        // const root_folder = {label: 'Zoho Docs', value: null}
-        // // Add the root folder as the first option before all the folders from getFolders()
-        // const options = [root_folder, ...folders]
-        // return options
+
+        //Zoho Docs uses different property names depending on whether the folder is top-level or not
+        function getName(folder){
+          return folder.FOLDERNAME || folder.FOLDER_NAME
+        }
+        function getId(folder){
+          return folder.FOLDERID || folder.FOLDER_ID
+        }
       },
     },
     filePath: {
