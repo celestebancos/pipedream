@@ -7,7 +7,7 @@ module.exports = {
   name: "Upload File",
   description: "Upload a file to the specified folder.",
   key: "upload_file",
-  version: "0.3.6",
+  version: "0.4.7",
   type: "action",
   props: {
     zohoDocs,
@@ -16,7 +16,15 @@ module.exports = {
       label: "Folder",
       description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly.",
       async options({prevContext}){
-        const folders = await this.getSubfolders(prevContext.parent_folder_id)
+        const unchecked_folder_ids = prevContext.unchecked_folder_ids || []
+        let folder_id_to_check = unchecked_folder_ids.shift()
+        let folders = await this.getSubfolders(folder_id_to_check)
+
+        while(folders.length === 0 && unchecked_folder_ids.length > 0){
+          folder_id_to_check = unchecked_folder_ids.shift()
+          folders = await this.getSubfolders(folder_id_to_check)
+        }
+
         const options = folders.map(folder => {
           return {
             label: ' > ' + getName(folder),
@@ -30,10 +38,12 @@ module.exports = {
           options.unshift(root_folder)
         }
 
-        const next_folder_id = folders[0] ? getId(folders[0]) : prevContext.parent_folder_id
+        const subfolder_ids = folders.map(folder => getId(folder))
+        const more_unchecked_folder_ids = unchecked_folder_ids.concat(subfolder_ids)
+
         return {
           options,
-          context: {parent_folder_id: next_folder_id},
+          context: {unchecked_folder_ids: more_unchecked_folder_ids},
         }
 
         //Zoho Docs uses different property names depending on whether the folder is top-level or not
