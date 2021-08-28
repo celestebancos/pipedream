@@ -7,7 +7,7 @@ module.exports = {
   name: "Upload File",
   description: "Upload a file to the specified folder.",
   key: "upload_file",
-  version: "0.4.33",
+  version: "0.5.1",
   type: "action",
   props: {
     zohoDocs,
@@ -29,7 +29,7 @@ module.exports = {
 
         // Get subfolders for each item in the list of parent folders and convert them all to options
         const pending_option_lists = prevContext.parent_folders.map(folder => getOptions(folder))
-        const new_options = (await Promise.all(pending_option_lists)).flat()
+        const new_options = (await Promise.all(pending_option_lists)).flat().sort(sortByLabel)
         options.push(...new_options)
 
         // Return the new options and use them as the list of parent folders next time
@@ -51,6 +51,18 @@ module.exports = {
           return {
             label: parent_name  + ' > ' + folder.FOLDER_NAME,
             value: folder.FOLDER_ID,
+          }
+        }
+
+        function sortByLabel(option_A, option_B){
+          const label_A = option_A.label.toLowerCase()
+          const label_B = option_B.label.toLowerCase()
+          if(label_A < label_B){
+            return -1
+          } else if(label_B > label_A){
+            return 1
+          } else {
+            return 0
           }
         }
       },
