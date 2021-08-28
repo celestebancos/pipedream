@@ -77,9 +77,20 @@ module.exports = {
           folderid: parent_folder_id,
         },
       })
+      // Ihe Zoho Docs API returns two different schemas depending on whether the folderid request param was defined.
       if(data.FOLDER){
-        return data.FOLDER
+        // If a folderid was given, the response contains the subfolders of that folder.
+        // The response has a FOLDER property and the folders have FOLDERNAME and FOLDERID properties (no underscores).
+        const standardized_folders = data.FOLDER.map(folder => {
+          folder.FOLDER_NAME = folder.FOLDERNAME
+          folder.FOLDER_ID = folder.FOLDERID
+          return folder
+        })
+        return standardized_folders
       } else if (data.length){
+        // If the folderid param was not defined, the response contains subfolders of the user's root folder.
+        // The response is an array with the first item being meta-data and the rest of the items being folder objects
+        // (wrapped in arrays) with FOLDER_NAME and FOLDER_ID properties.
         const [folderInfo, ...folders] = data
         return folders.map(folder => folder[0])
       } else {
