@@ -5,16 +5,17 @@ const fs = require("fs");
 
 module.exports = {
   name: "Upload File",
-  description: "Upload a file to the specified folder.",
+  description: "Upload a file from the /tmp directory to a Zoho Docs folder.",
   key: "upload_file",
-  version: "0.5.1",
+  version: "0.5.3",
   type: "action",
   props: {
     zohoDocs,
     folderID: {
       type: "string",
       label: "Folder",
-      description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly.",
+      description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly. " +
+      "Any folders in *Shared with Me* must be entered by ID as they will not be available on the dropdown.",
       async options({prevContext}){
         const getFolders = this.getFolders
         const options = []
@@ -70,6 +71,7 @@ module.exports = {
     filePath: {
       type: "string",
       label: "File Path",
+      description: "E.g. `/tmp/myFile.pdf`"
     },
     fileName: {
       type: "string",
