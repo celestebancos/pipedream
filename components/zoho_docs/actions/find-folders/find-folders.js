@@ -15,6 +15,11 @@ module.exports = {
 			description: 'Any folder that contains the search term in its name will be returned. Leave blank to get all folders.',
 			optional: true,
 		},
+		caseSensitive: {
+			type: 'boolean',
+			label: 'Case Sensitive',
+			default: true,
+		},
 		parentFolderId: {
 			propDefinition: [
 				zohoDocs,
@@ -26,11 +31,6 @@ module.exports = {
 			"Any folders in *Shared with Me* must be entered by ID as they will not be available on the dropdown.",
 			optional: true,
 		},
-		caseSensitive:{
-			type: 'boolean',
-			label: 'Case Sensitive',
-			default: true
-		}
 	},
 	methods: {
 	},
