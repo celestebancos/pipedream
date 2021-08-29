@@ -5,7 +5,7 @@ module.exports = {
 	name: "Find Folders",
 	description: "Search for folders by name.",
 	key: "find_folders",
-	version: "0.1.3",
+	version: "0.1.5",
 	type: "action",
 	props: {
     ...common.props,
@@ -26,12 +26,23 @@ module.exports = {
       "Any folders in *Shared with Me* must be entered by ID as they will not be available on the dropdown.",
       optional: true,
     },
+    caseSensitive:{
+    	type: 'boolean',
+    	label: 'Case Sensitive',
+    	default: true
+    }
 	},
 	methods: {
 	},
 	async run() {
 		const folders = await this.zohoDocs.getFolders(this.parentFolderId)
-		const matching_folders = folders.filter(folder => folder.FOLDER_NAME.includes(this.searchTerm))
+		const matching_folders = folders.filter(folder => {
+			if(this.caseSensitive){
+				return folder.FOLDER_NAME.includes(this.searchTerm)
+			} else {
+				return folder.FOLDER_NAME.toLowerCase().includes(this.searchTerm.toLowerCase())
+			}
+		})
 		return matching_folders
 	},
 };
