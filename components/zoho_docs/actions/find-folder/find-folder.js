@@ -9,6 +9,17 @@ module.exports = {
 	type: "action",
 	props: {
     ...common.props,
+    parentFolderId: {
+      propDefinition: [
+        zohoDocs,
+        "folderId",
+      ],
+      label: "Folder to Search In (Optional)",
+      description: "Leave this blank to search in the root folder. " +
+      "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly. " +
+      "Any folders in *Shared with Me* must be entered by ID as they will not be available on the dropdown.",
+      optional: true,
+    },
 	},
 	methods: {
 	},
