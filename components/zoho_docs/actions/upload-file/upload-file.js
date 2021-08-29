@@ -1,4 +1,6 @@
 const zohoDocs = require("../../zoho_docs.app.js");
+const common = require("../common.js");
+
 const axios = require("axios");
 const FormData = require("form-data");
 const fs = require("fs");
@@ -10,7 +12,7 @@ module.exports = {
   version: "0.5.3",
   type: "action",
   props: {
-    zohoDocs,
+    ...common.props,
     folderID: {
       type: "string",
       label: "Folder",
@@ -80,6 +82,7 @@ module.exports = {
     },
   },
   methods: {
+    ...common.methods,
     async getFolders(parent_folder_id){
       const {data} = await axios({
         method: "get",
