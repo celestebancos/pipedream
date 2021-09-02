@@ -4,7 +4,7 @@ module.exports = {
   type: "app",
   app: "zoho_docs",
   propDefinitions: {
-    folderId: {
+    folder: {
       type: "string",
       label: "Folder",
       description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly. " +
@@ -16,7 +16,7 @@ module.exports = {
         // Put the root folder in as the first option on the dropdown
         // and set it as the first parent folder to use when getting subfolders
         if(prevContext.parent_folders === undefined){
-          const root_folder = {label: 'Zoho Docs', value: null}
+          const root_folder = {label: 'Zoho Docs', value: {FOLDER_NAME: 'Zoho Docs', FOLDER_ID: 1}}
           prevContext.parent_folders = [root_folder]
           options.push(root_folder)
         }
@@ -35,7 +35,7 @@ module.exports = {
         // Call the Zoho Docs API to get a list of folders inside each parent folder
         // and convert them all to options
         async function getOptions(parent_folder){
-          const folders = await getFolders(parent_folder.value)
+          const folders = await getFolders(parent_folder.value.FOLDER_ID)
           const options = folders.map(folder => convertToOption(folder, parent_folder.label))
           return options
         }
@@ -44,7 +44,7 @@ module.exports = {
         function convertToOption(folder, parent_name){
           return {
             label: parent_name  + ' > ' + folder.FOLDER_NAME,
-            value: folder.FOLDER_ID,
+            value: folder,
           }
         }
 
@@ -60,9 +60,13 @@ module.exports = {
           }
         }
       },
-    },},
+    },
+  },
   methods: {
     async getFolders(parent_folder_id){
+      // The ID of the Zoho Docs root folder is 1 but the folderid request param must be null
+      // to get the list of folders in the root folder
+      const folder_id = parent_folder_id === 1 ? null : parent_folder_id
       const {data} = await axios({
         method: "get",
         url: "https://apidocs.zoho.com/files/v1/folders",
@@ -70,7 +74,7 @@ module.exports = {
           "Authorization": `Zoho-oauthtoken ${this.$auth.oauth_access_token}`,
         },
         params: {
-          folderid: parent_folder_id,
+          folderid: folder_id,
         },
       })
       // Ihe Zoho Docs API returns two different schemas depending on whether the folderid request param was defined.
