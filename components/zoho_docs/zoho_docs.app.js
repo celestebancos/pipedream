@@ -10,22 +10,29 @@ module.exports = {
       description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly. " +
       "Any folders in *Shared with Me* must be entered by ID as they will not be available on the dropdown.",
       async options({ prevContext }) {
-        const options = [];
-
-        // Put the root folder in as the first option on the dropdown
-        // and set it as the first parent folder to use when getting subfolders
         if (prevContext.parentFolders === undefined) {
+          const {options, context} = await this.getFolderOptions(prevContext)
+          // Set the root folder as the first option on the dropdown
           const rootFolder = {
             label: "Zoho Docs",
             value: this.getRootFolder(),
           };
-          prevContext.parentFolders = [
-            rootFolder,
-          ];
-          options.push(rootFolder);
+          optionsWithRootFolder = [rootFolder, ...options]
+          return {options: optionsWithRootFolder, context}
+        } else{
+          // Don't include the root folder in additional sets of options
+          return await this.getFolderOptions(prevContext)
         }
-
-        return this.getFolderOptions(prevContext.parentFolders, options)
+      },
+    },
+    nonRootFolder: {
+      type: "string",
+      label: "Folder",
+      description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly. " +
+      "Any folders in *Shared with Me* must be entered by ID as they will not be available on the dropdown.",
+      async options({ prevContext }) {
+        // Don't include the root folder as an option on the dropdown
+        return await this.getFolderOptions(prevContext)
       },
     },
   },
@@ -36,49 +43,60 @@ module.exports = {
         FOLDER_ID: 1,
       };
     },
-    async getFolderOptions(parentFolders, options = []){
-        const getFolders = this.getFolders;
-        // Get subfolders for each item in the list of parent folders and convert them all
-        // to options
-        const pendingOptionLists = parentFolders.map((folder) => getOptions(folder));
-        const newOptions = (await Promise.all(pendingOptionLists)).flat().sort(sortByLabel);
-        options.push(...newOptions);
+    async getFolderOptions(prevContext){
+      const getFolders = this.getFolders;
 
-        // Return the new options and use them as the list of parent folders next time
+      // Set the root folder as the first parent folder to use when getting subfolders
+      // if there are no parent folders from the previous context
+      const parentFolders = (prevContext.parentFolders !== undefined)
+        ? prevContext.parentFolders
+        : [
+            {
+              label: "Zoho Docs",
+              value: this.getRootFolder(),
+            }
+          ]
+
+      // Get subfolders for each item in the list of parent folders and convert them all
+      // to options
+      const pendingOptionLists = parentFolders.map((folder) => getOptions(folder));
+      const new_options = (await Promise.all(pendingOptionLists)).flat().sort(sortByLabel);
+
+      // Return the new options and use them as the list of parent folders next time
+      return {
+        options: new_options,
+        context: {
+          parentFolders: new_options,
+        },
+      };
+
+      // Call the Zoho Docs API to get a list of folders inside each parent folder
+      // and convert them all to options
+      async function getOptions(parentFolder) {
+        const folders = await getFolders(parentFolder.value.FOLDER_ID);
+        const options = folders.map((folder) => convertToOption(folder, parentFolder.label));
+        return options;
+      }
+
+      // Convert a folder object returned by the Zoho Docs API into a label/value option object
+      function convertToOption(folder, parentName) {
         return {
-          options,
-          context: {
-            parentFolders: newOptions,
-          },
+          label: parentName  + " > " + folder.FOLDER_NAME,
+          value: folder,
         };
+      }
 
-        // Call the Zoho Docs API to get a list of folders inside each parent folder
-        // and convert them all to options
-        async function getOptions(parentFolder) {
-          const folders = await getFolders(parentFolder.value.FOLDER_ID);
-          const options = folders.map((folder) => convertToOption(folder, parentFolder.label));
-          return options;
+      function sortByLabel(optionA, optionB) {
+        const labelA = optionA.label.toLowerCase();
+        const labelB = optionB.label.toLowerCase();
+        if (labelA < labelB) {
+          return -1;
+        } else if (labelB > labelA) {
+          return 1;
+        } else {
+          return 0;
         }
-
-        // Convert a folder object returned by the Zoho Docs API into a label/value option object
-        function convertToOption(folder, parentName) {
-          return {
-            label: parentName  + " > " + folder.FOLDER_NAME,
-            value: folder,
-          };
-        }
-
-        function sortByLabel(optionA, optionB) {
-          const labelA = optionA.label.toLowerCase();
-          const labelB = optionB.label.toLowerCase();
-          if (labelA < labelB) {
-            return -1;
-          } else if (labelB > labelA) {
-            return 1;
-          } else {
-            return 0;
-          }
-        }
+      }
     },
     async getFolders(parentFolderId) {
       // The ID of the Zoho Docs root folder is 1 but the folderid request param must be null

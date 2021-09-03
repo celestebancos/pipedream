@@ -7,14 +7,14 @@ module.exports = {
   name: "Move Folder",
   description: "Move a folder from one location to another.",
   key: "move_folder",
-  version: "0.0.25",
+  version: "0.1.21",
   type: "action",
   props: {
     ...common.props,
     folderToMove: {
       propDefinition: [
         zohoDocs,
-        "folder",
+        "nonRootFolder",
       ],
       label: 'Folder to Move',
     },
