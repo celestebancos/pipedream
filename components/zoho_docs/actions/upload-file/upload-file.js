@@ -9,14 +9,14 @@ module.exports = {
   name: "Upload File",
   description: "Upload a file from the /tmp directory to a Zoho Docs folder.",
   key: "upload_file",
-  version: "0.6.0",
+  version: "0.6.4",
   type: "action",
   props: {
     ...common.props,
-    folderId: {
+    folder: {
       propDefinition: [
         zohoDocs,
-        "folderId",
+        "folder",
       ],
     },
     filePath: {
@@ -34,6 +34,9 @@ module.exports = {
     // ...common.methods,
     async uploadFile(folderID, filePath, fileName) {
       try {
+        // The ID of the Zoho Docs root folder is 1 but the fid request param must be null
+        // to get the list of folders in the root folder
+        const fid = (folderID === 1) ? null : folderID
         const data = new FormData();
         data.append("content", await fs.createReadStream(filePath));
         const response = await axios({
@@ -46,7 +49,7 @@ module.exports = {
           },
           params: {
             filename: fileName,
-            fid: folderID,
+            fid,
           },
           data: data,
         });
@@ -77,6 +80,6 @@ module.exports = {
       throw new Error("File must be saved in the /tmp directory and File Path must begin with '/tmp/'");
     }
     const fileName = this.fileName || this.filePath.replace ("/tmp/", "");
-    return await this.uploadFile(this.folderId, this.filePath, fileName);
+    return await this.uploadFile(this.folder.FOLDER_ID, this.filePath, fileName);
   },
 };
