@@ -16,7 +16,7 @@ module.exports = {
         // Put the root folder in as the first option on the dropdown
         // and set it as the first parent folder to use when getting subfolders
         if(prevContext.parent_folders === undefined){
-          const root_folder = {label: 'Zoho Docs', value: {FOLDER_NAME: 'Zoho Docs', FOLDER_ID: 1}}
+          const root_folder = {label: 'Zoho Docs', value: this.getRootFolder()}
           prevContext.parent_folders = [root_folder]
           options.push(root_folder)
         }
@@ -63,6 +63,12 @@ module.exports = {
     },
   },
   methods: {
+    getRootFolder(){
+      return {
+        FOLDER_NAME: 'Zoho Docs',
+        FOLDER_ID: 1,
+      }
+    },
     async getFolders(parent_folder_id){
       // The ID of the Zoho Docs root folder is 1 but the folderid request param must be null
       // to get the list of folders in the root folder

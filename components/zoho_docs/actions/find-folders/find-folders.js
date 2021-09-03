@@ -5,7 +5,7 @@ module.exports = {
   name: "Find Folders",
   description: "Search for folders by name.",
   key: "find_folders",
-  version: "0.3.16",
+  version: "0.4.1",
   type: "action",
   props: {
     ...common.props,
@@ -54,13 +54,15 @@ module.exports = {
     },
   },
   async run() {
-    const rootFolder = {
-      FOLDER_ID: this.parentFolder
-        ? this.parentFolder.FOLDER_ID
-        : 1,
-    };
+    const initialParentFolder = this.parentFolder || this.zohoDocs.getRootFolder();
+
+    // const rootFolder = {
+    //   FOLDER_ID: this.parentFolder
+    //     ? this.parentFolder.FOLDER_ID
+    //     : 1,
+    // };
     const folders = await this.getAllFolders([
-      rootFolder,
+      initialParentFolder,
     ]);
 
     const matchingFolders = folders.filter((folder) => {
@@ -70,13 +72,19 @@ module.exports = {
         return folder.FOLDER_NAME.toLowerCase().includes(this.searchTerm.toLowerCase());
       }
     });
+
+    const subfoldersText = this.searchSubfolders
+      ? " and all subfolders"
+      : "";
+    const locationText = initialParentFolder.FOLDER_NAME + subfoldersText;
     if (matchingFolders.length) {
-      console.log("Folders found:\n", matchingFolders.map((folder) => folder.FOLDER_NAME).join("\n"));
+      const lines = [
+        `Folders containing '${this.searchTerm}' found in ${locationText}:`,
+        ...matchingFolders.map((folder) => folder.FOLDER_NAME),
+      ];
+      console.log(lines.join("\n"));
     } else {
-      const subfoldersText = this.searchSubfolders
-        ? " and all subfolders"
-        : "";
-      console.log(`Unable to find any folders containing '${this.searchTerm}' when searching in ${this.parentFolder.FOLDER_NAME}${subfoldersText}.`);
+      console.log(`Unable to find any folders containing '${this.searchTerm}' when searching in ${locationText}.`);
     }
     return matchingFolders;
   },
