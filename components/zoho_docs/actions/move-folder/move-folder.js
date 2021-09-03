@@ -7,21 +7,21 @@ module.exports = {
   name: "Move Folder",
   description: "Move a folder from one location to another.",
   key: "move_folder",
-  version: "0.0.9",
+  version: "0.0.25",
   type: "action",
   props: {
     ...common.props,
     folderToMove: {
       propDefinition: [
         zohoDocs,
-        "folderId",
+        "folder",
       ],
       label: 'Folder to Move',
     },
     destinationFolder: {
       propDefinition: [
         zohoDocs,
-        "folderId",
+        "folder",
       ],
       label: 'Destination Folder',
     },
@@ -29,18 +29,26 @@ module.exports = {
   methods: {
   },
   async run() {
-    const parent_folder_id = null
-    const response = await axios({
-      method: "get",
-      url: "https://apidocs.zoho.com/files/v1/folders/move",
-      headers: {
-        "Authorization": `Zoho-oauthtoken ${this.zohoDocs.$auth.oauth_access_token}`,
-      },
-      params: {
-        folderid: this.folderToMove,
-        destfolderid: this.destinationFolder,
-        prevparentfolderid: parent_folder_id,
-      },
-    })
+    const params = {
+      folderid: this.folderToMove.FOLDER_ID,
+      prevparentfolderid: this.folderToMove.PARENT_FOLDER_ID,
+      destfolderid: this.destinationFolder.FOLDER_ID,
+    }
+
+    try{
+      const response = await axios({
+        method: "post",
+        url: "https://apidocs.zoho.com/files/v1/folders/move",
+        headers: {
+          "Authorization": `Zoho-oauthtoken ${this.zohoDocs.$auth.oauth_access_token}`,
+        },
+        params,
+      })
+      console.log(`Folder "${this.folderToMove.FOLDER_NAME}" moved to "${this.destinationFolder.FOLDER_NAME}"`)
+    } catch(ex){
+      console.log(ex.message)
+    }
+
+    return {folderToMove: this.folderToMove, destinationFolder: this.destinationFolder}
   },
 };
