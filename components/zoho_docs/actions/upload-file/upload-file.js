@@ -9,7 +9,7 @@ module.exports = {
   name: "Upload File",
   description: "Upload a file from the /tmp directory to a Zoho Docs folder.",
   key: "upload_file",
-  version: "0.6.4",
+  version: "0.7.1",
   type: "action",
   props: {
     ...common.props,
