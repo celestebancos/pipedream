@@ -5,7 +5,7 @@ module.exports = {
   name: "Find Folders",
   description: "Search for folders by name.",
   key: "find_folders",
-  version: "0.3.1",
+  version: "0.3.16",
   type: "action",
   props: {
     ...common.props,
@@ -20,10 +20,10 @@ module.exports = {
       label: "Case Sensitive",
       default: true,
     },
-    parentFolderId: {
+    parentFolder: {
       propDefinition: [
         zohoDocs,
-        "folderId",
+        "folder",
       ],
       label: "Folder to Search In (Optional)",
       description: "Leave this blank to search in the root folder. " +
@@ -39,8 +39,8 @@ module.exports = {
   },
   methods: {
     async getAllFolders(parentFolders) {
-      const folderLists = await Promise.all(parentFolders.map((folder) => {
-        this.zohoDocs.getFolders(folder.FOLDER_ID);
+      const folderLists = await Promise.all(parentFolders.map(async (folder) => {
+        return await this.zohoDocs.getFolders(folder.FOLDER_ID);
       }));
       const folders = folderLists.flat();
       if (folders.length === 0) {
@@ -55,7 +55,9 @@ module.exports = {
   },
   async run() {
     const rootFolder = {
-      FOLDER_ID: this.parentFolderId,
+      FOLDER_ID: this.parentFolder
+        ? this.parentFolder.FOLDER_ID
+        : 1,
     };
     const folders = await this.getAllFolders([
       rootFolder,
@@ -71,13 +73,10 @@ module.exports = {
     if (matchingFolders.length) {
       console.log("Folders found:\n", matchingFolders.map((folder) => folder.FOLDER_NAME).join("\n"));
     } else {
-      const locationText = this.parentFolderId
-        ? `https://docs.zoho.com/folder/${this.parentFolderId}`
-        : "Zoho Docs folder";
       const subfoldersText = this.searchSubfolders
         ? " and all subfolders"
         : "";
-      console.log(`Unable to find any folders containing '${this.searchTerm}' when searching in ${locationText}${subfoldersText}.`);
+      console.log(`Unable to find any folders containing '${this.searchTerm}' when searching in ${this.parentFolder.FOLDER_NAME}${subfoldersText}.`);
     }
     return matchingFolders;
   },
