@@ -10,7 +10,6 @@ module.exports = {
       description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly. " +
       "Any folders in *Shared with Me* must be entered by ID as they will not be available on the dropdown.",
       async options({ prevContext }) {
-        const getFolders = this.getFolders;
         const options = [];
 
         // Put the root folder in as the first option on the dropdown
@@ -26,9 +25,22 @@ module.exports = {
           options.push(rootFolder);
         }
 
+        return this.getFolderOptions(prevContext.parentFolders, options)
+      },
+    },
+  },
+  methods: {
+    getRootFolder() {
+      return {
+        FOLDER_NAME: "Zoho Docs",
+        FOLDER_ID: 1,
+      };
+    },
+    async getFolderOptions(parentFolders, options = []){
+        const getFolders = this.getFolders;
         // Get subfolders for each item in the list of parent folders and convert them all
         // to options
-        const pendingOptionLists = prevContext.parentFolders.map((folder) => getOptions(folder));
+        const pendingOptionLists = parentFolders.map((folder) => getOptions(folder));
         const newOptions = (await Promise.all(pendingOptionLists)).flat().sort(sortByLabel);
         options.push(...newOptions);
 
@@ -67,15 +79,6 @@ module.exports = {
             return 0;
           }
         }
-      },
-    },
-  },
-  methods: {
-    getRootFolder() {
-      return {
-        FOLDER_NAME: "Zoho Docs",
-        FOLDER_ID: 1,
-      };
     },
     async getFolders(parentFolderId) {
       // The ID of the Zoho Docs root folder is 1 but the folderid request param must be null
