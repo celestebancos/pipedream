@@ -7,8 +7,9 @@ module.exports = {
     folder: {
       type: "string",
       label: "Folder",
-      description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly. " +
-      "Any folders in *Shared with Me* must be entered by ID as they will not be available on the dropdown.",
+      description: "Folders in the Zoho Docs *Shared with Me* folder are not available from the dropdown " +
+      "and must be entered as objects with a *FOLDER_ID* property: " +
+      "\n`{FOLDER_ID: \"ell0dptvw5ilwndfeqp3bupdjfzp48a7s0j4f\"}` ",
       async options({ prevContext }) {
         if (prevContext.parentFolders === undefined) {
           const {
@@ -37,8 +38,9 @@ module.exports = {
     nonRootFolder: {
       type: "string",
       label: "Folder",
-      description: "Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly. " +
-      "Any folders in *Shared with Me* must be entered by ID as they will not be available on the dropdown.",
+      description: "Folders in the Zoho Docs *Shared with Me* folder are not available from the dropdown " +
+      "and must be entered as objects with a *FOLDER_ID* property: " +
+      "\n`{FOLDER_ID: \"ell0dptvw5ilwndfeqp3bupdjfzp48a7s0j4f\"}` ",
       async options({ prevContext }) {
         // Don't include the root folder as an option on the dropdown
         return await this.getFolderOptions(prevContext);
