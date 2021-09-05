@@ -5,7 +5,7 @@ module.exports = {
   name: "Find Folders",
   description: "Search for folders by name.",
   key: "find_folders",
-  version: "0.4.1",
+  version: "0.4.6",
   type: "action",
   props: {
     ...common.props,
@@ -27,8 +27,9 @@ module.exports = {
       ],
       label: "Folder to Search In (Optional)",
       description: "Leave this blank to search in the root folder. " +
-			"Choose a folder from the dropdown or turn structured mode off to enter a folder ID directly. " +
-			"Any folders in *Shared with Me* must be entered by ID as they will not be available on the dropdown.",
+      "Folders in the Zoho Docs *Shared with Me* folder are not available from the dropdown " +
+      "and must be entered as objects with a *FOLDER_ID* property: " +
+      "\n`{{ {FOLDER_ID: \"ell0dptvw5ilwndfeqp3bupdjfzp48a7s0j4f\"} }}` ",
       optional: true,
     },
     searchSubfolders: {
@@ -54,6 +55,9 @@ module.exports = {
     },
   },
   async run() {
+    if(this.parentFolder){
+      this.zohoDocs.validateFolderProp(this.parentFolder, 'Folder to Search In')
+    }
     const initialParentFolder = this.parentFolder || this.zohoDocs.getRootFolder();
 
     // const rootFolder = {

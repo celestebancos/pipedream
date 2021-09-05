@@ -9,7 +9,7 @@ module.exports = {
   name: "Upload File",
   description: "Upload a file from the /tmp directory to a Zoho Docs folder.",
   key: "upload_file",
-  version: "0.7.1",
+  version: "0.7.2",
   type: "action",
   props: {
     ...common.props,
@@ -76,6 +76,7 @@ module.exports = {
     },
   },
   async run() {
+    this.zohoDocs.validateFolderProp(this.folder, 'Folder')
     if (!this.filePath.startsWith("/tmp/")) {
       throw new Error("File must be saved in the /tmp directory and File Path must begin with '/tmp/'");
     }
