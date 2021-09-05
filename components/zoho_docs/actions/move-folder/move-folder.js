@@ -7,7 +7,7 @@ module.exports = {
   name: "Move Folder",
   description: "Move a folder from one location to another.",
   key: "move_folder",
-  version: "0.3.3",
+  version: "0.3.5",
   type: "action",
   props: {
     ...common.props,
@@ -32,25 +32,11 @@ module.exports = {
   },
   methods: {},
   async run() {
-    if(!this.folderToMove || !this.folderToMove.FOLDER_ID){
-       console.log(`Folder to Move: `, this.folderToMove)
-     if(typeof this.folderToMove === 'string'){
-        throw new Error('Folder to Move is a string instead of an object. If you entered an object literal, ' +
-          'make sure to wrap it in double curly braces so it is not evaluated as a string: {{ {FOLDER_ID: folder_id_value} }}')
-      } else {
-        throw new Error('Folder to Move must be a single object and must have a FOLDER_ID property.')
-      }
-    } else if(!this.folderToMove.PARENT_FOLDER_ID){
+    this.zohoDocs.validateFolderProp(this.folderToMove, 'Folder to Move')
+    this.zohoDocs.validateFolderProp(this.destinationFolder, 'Destination Folder')
+    if(!this.folderToMove.PARENT_FOLDER_ID){
       console.log('Folder to Move: ', this.folderToMove)
       throw new Error('Folder to Move must have a PARENT_FOLDER_ID property.')
-    } else if(!this.destinationFolder || !this.destinationFolder.FOLDER_ID){
-      console.log(`Destination Folder: `, this.destinationFolder)
-      if(typeof this.destinationFolder === 'string'){
-        throw new Error('Destination Folder is a string instead of an object. If you entered an object literal, ' +
-          'make sure to wrap it in double curly braces so it is not evaluated as a string:pd {{ {FOLDER_ID: folder_id_value} }}')
-      } else {
-        throw new Error('Destination Folder must be a single object and must have a FOLDER_ID property.')
-      }
     }
 
     const params = {

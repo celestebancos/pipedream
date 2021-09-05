@@ -151,5 +151,16 @@ module.exports = {
         throw new Error(`Folder ID: ${parentFolderId} Data: ${JSON.stringify(data)}`);
       }
     },
+    validateFolderProp(prop, prop_name){
+      if(!prop || !prop.FOLDER_ID){
+         console.log(`${prop_name}: `, prop)
+       if(typeof prop === 'string'){
+          throw new Error(`'${prop_name}' is a string instead of an object. If you entered a step reference or an object literal, ` +
+            `make sure to wrap it in double curly braces so it is not evaluated as a string: {{ {FOLDER_ID: folder_id_value} }}`)
+        } else {
+          throw new Error(`'${prop_name}' must be a single object and must have a FOLDER_ID property.`)
+        }
+      }
+    },
   },
 };
