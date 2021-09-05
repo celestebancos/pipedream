@@ -7,7 +7,7 @@ module.exports = {
   name: "Move Folder",
   description: "Move a folder from one location to another.",
   key: "move_folder",
-  version: "0.3.1",
+  version: "0.3.3",
   type: "action",
   props: {
     ...common.props,
@@ -70,7 +70,12 @@ module.exports = {
       });
       console.log(`Folder "${this.folderToMove.FOLDER_NAME}" moved to "${this.destinationFolder.FOLDER_NAME}"`);
     } catch (ex) {
-      console.log(ex.message);
+      if(ex.response.status === 500){
+        console.log(params)
+        throw new Error('Request failed with status code 500. Double-check that the folder IDs listed below are correct and that the folders still exist.')
+      } else {
+        throw ex
+      }
     }
 
     return {
