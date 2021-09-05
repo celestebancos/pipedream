@@ -9,7 +9,7 @@ module.exports = {
       label: "Folder",
       description: "Folders in the Zoho Docs *Shared with Me* folder are not available from the dropdown " +
       "and must be entered as objects with a *FOLDER_ID* property: " +
-      "\n`{FOLDER_ID: \"ell0dptvw5ilwndfeqp3bupdjfzp48a7s0j4f\"}` ",
+      "\n`{{ {FOLDER_ID: \"ell0dptvw5ilwndfeqp3bupdjfzp48a7s0j4f\"} }}` ",
       async options({ prevContext }) {
         if (prevContext.parentFolders === undefined) {
           const {
@@ -40,7 +40,7 @@ module.exports = {
       label: "Folder",
       description: "Folders in the Zoho Docs *Shared with Me* folder are not available from the dropdown " +
       "and must be entered as objects with a *FOLDER_ID* property: " +
-      "\n`{FOLDER_ID: \"ell0dptvw5ilwndfeqp3bupdjfzp48a7s0j4f\"}` ",
+      "\n`{{ {FOLDER_ID: \"ell0dptvw5ilwndfeqp3bupdjfzp48a7s0j4f\"} }}` ",
       async options({ prevContext }) {
         // Don't include the root folder as an option on the dropdown
         return await this.getFolderOptions(prevContext);
