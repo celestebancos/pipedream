@@ -42,6 +42,15 @@ module.exports = {
       const { data } = await axios.get(url, requestConfig);
       return data;
     },
+    async genericApiPostCall(url, requestData, params = {}) {
+      const baseRequestConfig = this._makeRequestConfig();
+      const requestConfig = {
+        ...baseRequestConfig,
+        params,
+      };
+      const { data } = await axios.post(url, requestData, requestConfig);
+      return data;
+    },
     usersPageSize() {
       return 200;
     },
@@ -209,5 +218,21 @@ module.exports = {
       const { data } = await axios.patch(url, requestData, requestConfig);
       return data;
     },
+    async postCOQLQuery(query, page = 0){
+      const MAX_RECORDS = 200
+      const limit = ` LIMIT ${page}, ${MAX_RECORDS}`
+      const url = this._apiUrl() + '/coql'
+      const data = {
+        'select_query' : query + limit
+      }
+
+      const batch = await this.genericApiPostCall(url, data)
+
+      if(batch.info.more_records){
+        return batch.data.concat(await this.postCOQLQuery(query, page + MAX_RECORDS))
+      } else {
+        return batch.data
+      }
+    }
   },
 };
