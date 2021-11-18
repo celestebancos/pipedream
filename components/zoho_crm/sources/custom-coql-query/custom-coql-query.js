@@ -29,13 +29,4 @@ module.exports = {
       this.$emit(first_result, this.generateMeta(first_result));
     },
   },
-  // async run(event) {
-  //   this.$emit(
-  //     { event },
-  //     {
-  //       summary: "Hello, world!",
-  //       ts: Date.now(),
-  //     }
-  //   );
-  // },
 };
