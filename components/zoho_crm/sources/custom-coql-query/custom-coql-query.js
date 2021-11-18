@@ -16,10 +16,10 @@ module.exports = {
   },
   type: "source",
   methods: {
-    generateMeta(){
+    generateMeta(record){
       return {
-        id: 'placeholder',
-        summary: 'This is the summary.'
+        id: record.id,
+        summary: record.id
       }
     },
     async processEvent(event){
@@ -29,12 +29,7 @@ module.exports = {
 
       const coql_records = await this.zoho_crm.postCOQLQuery(query)
       const first_result = coql_records[0]
-      // const first_result = {query}
-      const result = {
-        event: first_result
-      }
-      const meta = this.generateMeta()
-      this.$emit(result, meta);
+      this.$emit(first_result, this.generateMeta(first_result));
     },
   },
   // async run(event) {
