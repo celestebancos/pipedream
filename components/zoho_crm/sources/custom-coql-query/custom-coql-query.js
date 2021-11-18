@@ -23,10 +23,7 @@ module.exports = {
       }
     },
     async processEvent(event){
-      const query = `SELECT Account_Name, Shipping_Contact, Shipping_Contact_Old, Shipping_Phone, Shipping_Email 
-        FROM Accounts 
-        WHERE Shipping_Contact is null and (Shipping_Contact_Old is not null or (Shipping_Phone is not null or Shipping_Email is not null))`
-
+      const query = this.query
       const coql_records = await this.zoho_crm.postCOQLQuery(query)
       const first_result = coql_records[0]
       this.$emit(first_result, this.generateMeta(first_result));
