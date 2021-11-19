@@ -3,6 +3,33 @@ const axios = require("axios");
 module.exports = {
   type: "app",
   app: "zoho_crm",
+  propDefinitions:{
+    crm_module: {
+      type: 'string',
+      label: 'Module',
+      description: 'Choose a CRM Module',
+      options: [
+        {label: 'Leads', value: 'Leads'},
+        {label: 'Accounts', value: 'Accounts'},
+        {label: 'Contacts', value: 'Contacts'},
+        {label: 'Deals', value: 'Deals'},
+        {label: 'Products', value: 'Products'},
+        {label: 'Quotes', value: 'Quotes'},
+        {label: 'Sales Orders', value: 'Salesorders'},
+        {label: 'Purchase Orders', value: 'Purchaseorders'},
+        {label: 'Invoices', value: 'Invoices'},
+        {label: 'Campaigns', value: 'Campaigns'},
+        {label: 'Tasks', value: 'Tasks'},
+        {label: 'Cases', value: 'Cases'},
+        {label: 'Events', value: 'Events'},
+        {label: 'Solutions', value: 'Solutions'},
+        {label: 'Vendors', value: 'Vendors'},
+        {label: 'Price Books', value: 'Pricebooks'},
+        {label: 'Custom', value: 'Custom'},
+        {label: 'Notes', value: 'Notes'},
+      ]
+    }
+  },
   methods: {
     _authToken() {
       return this.$auth.oauth_access_token;
