@@ -12,7 +12,7 @@ module.exports = {
       description: "Enter a [comma-separated list of field API names]" +
         "(https://www.zoho.com/crm/developer/docs/api/v2/COQL-Overview.html) " +
         "to return as columns. Up to 50 columns are allowed. Unfortunately there is no shortcut to return all columns." +
-        "\nE.g. `Full_Name, Email, Phone`",
+        "\nE.g. `Full_Name, Email, Phone, Account_Name.Account_Name`",
       type: "string",
     },
     from: {
