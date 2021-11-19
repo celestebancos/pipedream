@@ -2,7 +2,7 @@ const zoho_crm = require("../../zoho_crm.app.js");
 
 module.exports = {
   name: "COQL Query",
-  version: "0.0.25",
+  version: "0.0.32",
   key: "zoho_crm-coql-query",
   description: "Get records via a COQL query. See [COQL Query API Docs](https://www.zoho.com/crm/developer/docs/api/v2/COQL-Overview.html) for more details on query construction.",
   props: {
@@ -16,11 +16,14 @@ module.exports = {
       type: "string",
     },
     from: {
+      propDefinition: [
+        zoho_crm,
+        'crm_module',
+      ],
       label: "FROM",
       description: "Enter the name of a [CRM module]" +
         "(https://www.zoho.com/crm/developer/docs/api/v2/Get-Records-through-COQL-Query.html)." +
         "\nE.g. `Contacts`",
-      type: "string",
     },
     where: {
       label: "WHERE",
