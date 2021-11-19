@@ -218,14 +218,13 @@ module.exports = {
       const { data } = await axios.patch(url, requestData, requestConfig);
       return data;
     },
-    async postCOQLQuery(query, page = 0){
+    async postCOQLQuery(query, offset = 0){
       try{
-        const MAX_RECORDS = 200
-        const limit = ` LIMIT ${page}, ${MAX_RECORDS}`
-        const url = this._apiUrl() + '/coql'
+        const MAX_RECORDS_PER_REQUEST = 200
         const data = {
-          'select_query' : query + limit
+          'select_query' : `${query}\nLIMIT ${offset}, ${MAX_RECORDS_PER_REQUEST}`
         }
+        const url = this._apiUrl() + '/coql'
 
         const batch = await this.genericApiPostCall(url, data)
 
@@ -233,19 +232,19 @@ module.exports = {
           console.log(`No records found for query \n${query}`)
           return []
         } else if(batch.info.more_records){
-          return batch.data.concat(await this.postCOQLQuery(query, page + MAX_RECORDS))
+          const new_offset = offset + MAX_RECORDS_PER_REQUEST
+          return batch.data.concat(await this.postCOQLQuery(query, new_offset))
         } else {
           return batch.data
         }
       } catch(ex){
-        if(ex.response.data && ex.response.data.code === 'SYNTAX_ERROR'){
-          const {line, column, near} = ex.response.data.details
+        if(ex.response && ex.response.data && ex.response.data.code === 'SYNTAX_ERROR'){
+          const {line, column, near} = ex.response.data.details || {}
           const error_message = `Syntax error in line ${line} column ${column} of query near '${near}'`
           console.log(error_message)
           console.log(query)
           throw new Error(error_message)
         } else {
-          console.log(ex)
           throw ex
         }
         return []
