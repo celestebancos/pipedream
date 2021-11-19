@@ -219,22 +219,36 @@ module.exports = {
       return data;
     },
     async postCOQLQuery(query, page = 0){
-      const MAX_RECORDS = 200
-      const limit = ` LIMIT ${page}, ${MAX_RECORDS}`
-      const url = this._apiUrl() + '/coql'
-      const data = {
-        'select_query' : query + limit
-      }
+      try{
+        const MAX_RECORDS = 200
+        const limit = ` LIMIT ${page}, ${MAX_RECORDS}`
+        const url = this._apiUrl() + '/coql'
+        const data = {
+          'select_query' : query + limit
+        }
 
-      const batch = await this.genericApiPostCall(url, data)
+        const batch = await this.genericApiPostCall(url, data)
 
-      if(!batch){
-        console.log(`No records found for query \n${query}`)
+        if(!batch){
+          console.log(`No records found for query \n${query}`)
+          return []
+        } else if(batch.info.more_records){
+          return batch.data.concat(await this.postCOQLQuery(query, page + MAX_RECORDS))
+        } else {
+          return batch.data
+        }
+      } catch(ex){
+        if(ex.response.data && ex.response.data.code === 'SYNTAX_ERROR'){
+          const {line, column, near} = ex.response.data.details
+          const error_message = `Syntax error in line ${line} column ${column} of query near '${near}'`
+          console.log(error_message)
+          console.log(query)
+          throw new Error(error_message)
+        } else {
+          console.log(ex)
+          throw ex
+        }
         return []
-      } else if(batch.info.more_records){
-        return batch.data.concat(await this.postCOQLQuery(query, page + MAX_RECORDS))
-      } else {
-        return batch.data
       }
     }
   },
