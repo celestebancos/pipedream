@@ -228,7 +228,10 @@ module.exports = {
 
       const batch = await this.genericApiPostCall(url, data)
 
-      if(batch.info.more_records){
+      if(!batch){
+        console.log(`No records found for query \n${query}`)
+        return []
+      } else if(batch.info.more_records){
         return batch.data.concat(await this.postCOQLQuery(query, page + MAX_RECORDS))
       } else {
         return batch.data
