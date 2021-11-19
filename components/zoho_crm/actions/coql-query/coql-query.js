@@ -2,7 +2,7 @@ const zoho_crm = require("../../zoho_crm.app.js");
 
 module.exports = {
   name: "COQL Query",
-  version: "0.0.32",
+  version: "0.0.37",
   key: "zoho_crm-coql-query",
   description: "Get records via a COQL query. See [COQL Query API Docs](https://www.zoho.com/crm/developer/docs/api/v2/COQL-Overview.html) for more details on query construction.",
   props: {
@@ -34,11 +34,12 @@ module.exports = {
     },
     order_by: {
       label: "ORDER BY",
-      description: "Enter a [field API name]" +
+      description: "Optional: Enter a [field API name]" +
         "(https://www.zoho.com/crm/developer/docs/api/v2/COQL-Overview.html) " +
         "followed by ASC or DESC." +
         "\nE.g. `Full_Name ASC`",
       type: "string",
+      optional: true,
     },
   },
   type: "action",
@@ -48,7 +49,7 @@ module.exports = {
     const select = 'SELECT ' + this.select
     const from = 'FROM ' + this.from
     const where = 'WHERE ' + this.where
-    const order_by = 'ORDER BY ' + this.order_by
+    const order_by = this.order_by ? 'ORDER BY ' + this.order_by : ''
     const query = [select, from, where, order_by].join('\n')
     // const max_records = this.max_records
 
