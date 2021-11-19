@@ -265,16 +265,45 @@ module.exports = {
           return batch.data
         }
       } catch(ex){
-        if(ex.response && ex.response.data && ex.response.data.code === 'SYNTAX_ERROR'){
-          const {line, column, near} = ex.response.data.details || {}
-          const error_message = `Syntax error in line ${line} column ${column} of query near '${near}'`
+        const error_message = parseQueryErrors(ex)
+        if(error_message){
           console.log(error_message)
           console.log(query)
           throw new Error(error_message)
         } else {
+          console.log(ex.response ? ex.response.data : ex)
           throw ex
         }
         return []
+      }
+      function parseQueryErrors(ex){
+        if(ex.response && ex.response.data){
+          const {code, details, message} = ex.response.data
+          console.log(message)
+          console.log(details)
+          if(code === 'INVALID_QUERY'){
+            const {column_name, module: crm_module, expected_data_type, operator} = details || {}
+            if(crm_module && column_name){
+              return `Query Syntax Error: module name '${crm_module}' is invalid.`
+            } else if(expected_data_type && column_name){
+              return `Query Syntax Error: value given for ${column_name} is not a ${expected_data_type}.`
+            } else if(operator && column_name){
+              return `Query Syntax Error: '${operator}'' is not a valid operator for ${column_name}.`
+            } else if(column_name){
+              return `Query Syntax Error: Either '${column_name}' is an invalid field API name or the field type is not supported by the COQL API.`
+            } else {
+              return null
+            }
+          } else if(code === 'SYNTAX_ERROR'){
+            const {line, column, near} = details || {}
+            return `Syntax error in line ${line} column ${column} of query near '${near}'`
+          } else if (code === 'DUPLICATE_DATA'){
+            const {column_name}  = details || {}
+            return `Query Syntax Error: ${column_name} may only appear once in the SELECT field names list.`
+          } else {
+            return null
+          }
+        }
       }
     }
   },
