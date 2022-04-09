@@ -17,7 +17,11 @@ If you have any questions related to data privacy, please email <span style="fon
 
 If you'd like to report a suspected vulnerability, please contact <span style="font-weight: bold">security@pipedream.com</span>.
 
-If you need to encrypt sensitive data as part of your report, you can use our [PGP key](/security/pgp-key/).
+If you need to encrypt sensitive data as part of your report, you can use our [PGP key](/privacy-and-security/pgp-key/).
+
+## Reporting abuse
+
+If you suspect Pipedream resources are being used for illegal purposes, or otherwise violate [the Pipedream Terms](https://pipedream.com/terms), [report it here](/abuse/).
 
 ## Hosting Details
 
@@ -63,7 +67,7 @@ All Pipedream-managed certificates used to protect user data in transit are crea
 
 ## Email Security
 
-Pipedream delivers emails to users for the purpose of email verification, error notifications, and more. Pipedream implements [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework) and [DMARC](https://en.wikipedia.org/wiki/DMARC) DNS records to guard against email spoofing / forgery. You can review these records by using a DNS lookup tool like [`dig`](<https://en.wikipedia.org/wiki/Dig_(command)>):
+Pipedream delivers emails to users for the purpose of email verification, error notifications, and more. Pipedream implements [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework) and [DMARC](https://en.wikipedia.org/wiki/DMARC) DNS records to guard against email spoofing / forgery. You can review these records by using a DNS lookup tool like [`dig`](https://en.wikipedia.org/wiki/Dig_(command)):
 
 ```bash
 # SPF
@@ -82,7 +86,15 @@ Pipedream notifies customers of any data breaches according to our [Data Protect
 
 Pipedream is considered both a Controller and a Processor as defined by the GDPR. As a Processor, Pipedream implements policies and practices that secure the personal data you send to the platform, and includes a [Data Protection Addendum](https://pipedream.com/dpa) as part of our standard [Terms of Service](https://pipedream.com/terms).
 
+The Pipedream Data Protection Addendum includes the [Standard Contractual Clauses (SCCs)](https://ec.europa.eu/info/law/law-topic/data-protection/international-dimension-data-protection/standard-contractual-clauses-scc_en). These clarify how Pipedream handles your data, and they update our GDPR policies to cover the latest standards set by the European Commission.
+
 You can find a list of Pipedream subprocessors [here](/subprocessors/).
+
+## Submitting a GDPR deletion request
+
+When you [delete your account](/user-settings/#delete-account), Pipedream deletes all personal data we hold on you in our system and our vendors.
+
+If you need to delete data on behalf of one of your users, you can delete the event data yourself in your workflow or event source (for example, by deleting the events, or by removing the data from `$checkpoint`). Your customer event data is automatically deleted from Pipedream subprocessors.
 
 ## Payment Processor
 

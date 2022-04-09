@@ -10,10 +10,18 @@ matrix:
   pipeline:
   - pyspelling.filters.markdown:
   - pyspelling.filters.html:
-    comments: false
-    ignores:
-    - code
-    - pre
+      comments: false
+      ignores:
+      - code
+      - pre
+  - pyspelling.filters.context:
+      delimiters:
+      # Ignore multiline content in frontmatter (frontmatter has 3 dashes)
+      # ---
+      # content
+      # ---
+      - open: '(?s)^(?P<open> *\-{3})$'
+        close: '^(?P=open)$'
   sources:
   - '**/*.md'
   default_encoding: utf-8

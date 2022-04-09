@@ -6,7 +6,7 @@ If you use a service that requires you whitelist a range of IP addresses, you ha
 
 ## HTTP requests
 
-If you need to send HTTP requests to a service from a fixed range of IP addresses, [see these docs](/workflows/steps/code/nodejs/http-requests/#ip-addresses-for-http-requests-made-from-pipedream-workflows).
+If you need to send HTTP requests to a service from a fixed range of IP addresses, [see these docs](/code/nodejs/http-requests/#ip-addresses-for-http-requests-made-from-pipedream-workflows).
 
 ## Non-HTTP traffic (databases, etc.)
 
@@ -16,8 +16,8 @@ Then, in your Pipedream workflow, you can [tunnel the connection](https://linuxi
 
 Here are two example workflows that show you how to connect to services through a bastion server:
 
-- [Run a MySQL query through an SSH tunnel](https://frontend-canary.pipedream.com/@dylburger/run-a-query-on-mysql-via-ssh-tunnel-p_rvCxrNB/edit)
-- [Run a PostgreSQL query through an SSH tunnel](https://frontend-canary.pipedream.com/@dylburger/run-a-query-on-postgres-via-ssh-tunnel-p_13CvRz/edit)
+- [Run a MySQL query through an SSH tunnel](https://pipedream.com/@dylburger/run-a-query-on-mysql-via-ssh-tunnel-p_rvCxrNB/edit)
+- [Run a PostgreSQL query through an SSH tunnel](https://pipedream.com/@dylburger/run-a-query-on-postgres-via-ssh-tunnel-p_13CvRz/edit)
 
 ## Feature request for Pipedream restricting its IP range
 
