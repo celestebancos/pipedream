@@ -1,13 +1,13 @@
 import googleDrive from "../../google_drive.app.mjs";
 import fs from "fs";
-import got from "got";
-import { toSingleLineString } from "../../utils.mjs";
+import got from "got@13.0.0";
+import { toSingleLineString } from "../../common/utils.mjs";
 
 export default {
   key: "google_drive-create-file",
   name: "Create a New File",
   description: "Create a new file from a URL or /tmp/filepath. [See the docs](https://developers.google.com/drive/api/v3/reference/files/create) for more information",
-  version: "0.0.6",
+  version: "0.1.3",
   type: "action",
   props: {
     googleDrive,
@@ -21,12 +21,15 @@ export default {
       propDefinition: [
         googleDrive,
         "folderId",
+        (c) => ({
+          drive: c.drive,
+        }),
       ],
       label: "Parent Folder",
       description: toSingleLineString(`
-        The ID of the parent folder which contains the file. If not specified as part of a 
-        create request, the file will be placed directly in the user's My Drive folder.
-      `),
+        The ID of the parent folder which contains the file. If not specified, the file will be
+        placed directly in the drive's top-level folder.
+    `),
       optional: true,
     },
     uploadType: {
@@ -51,9 +54,9 @@ export default {
       type: "boolean",
       label: "Ignore Default Visibility",
       description: toSingleLineString(`
-        Whether to ignore the domain's default visibility settings for the created 
-        file. Domain administrators can choose to make all uploaded files visible to the domain 
-        by default; this parameter bypasses that behavior for the request. Permissions are still 
+        Whether to ignore the domain's default visibility settings for the created
+        file. Domain administrators can choose to make all uploaded files visible to the domain
+        by default; this parameter bypasses that behavior for the request. Permissions are still
         inherited from parent folders.
       `),
       default: false,
@@ -62,7 +65,7 @@ export default {
       type: "string",
       label: "Include Permissions For View",
       description: toSingleLineString(`
-        Specifies which additional view's permissions to include in the response. Only 
+        Specifies which additional view's permissions to include in the response. Only
         'published' is supported.
       `),
       optional: true,
@@ -112,8 +115,8 @@ export default {
       type: "boolean",
       label: "Content Restrictions Read Only",
       description: toSingleLineString(`
-        Whether the content of the file is read-only. If a file is read-only, a new revision of 
-        the file may not be added, comments may not be added or modified, and the title of the file 
+        Whether the content of the file is read-only. If a file is read-only, a new revision of
+        the file may not be added, comments may not be added or modified, and the title of the file
         may not be modified.
       `),
       optional: true,
@@ -122,7 +125,7 @@ export default {
       type: "string",
       label: "Content Restrictions Reason",
       description: toSingleLineString(`
-        Reason for why the content of the file is restricted. This is only mutable on requests 
+        Reason for why the content of the file is restricted. This is only mutable on requests
         that also set readOnly=true.
       `),
       optional: true,
@@ -131,8 +134,8 @@ export default {
       type: "boolean",
       label: "Copy Requires Writer Permission",
       description: toSingleLineString(`
-        Whether the options to copy, print, or download this file, should be disabled for 
-        readers and commenters
+        Whether the options to copy, print, or download this file, should be disabled for
+        readers and commentators
       `),
       optional: true,
     },
@@ -195,6 +198,7 @@ export default {
     const body = this.fileUrl
       ? await got.stream(this.fileUrl)
       : fs.createReadStream(this.filePath);
+    const driveId = this.googleDrive.getDriveId(this.drive);
     const resp = await this.googleDrive.createFile({
       ignoreDefaultVisibility: this.ignoreDefaultVisibility,
       includePermissionsForView: this.includePermissionsForView,
@@ -206,7 +210,7 @@ export default {
         name: this.name,
         originalFilename: this.originalFilename,
         parents: [
-          this.parent,
+          this.parent ?? driveId,
         ],
         mimeType: this.mimeType,
         description: this.description,

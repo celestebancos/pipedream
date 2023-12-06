@@ -1,7 +1,8 @@
 import { v4 as uuid } from "uuid";
 import base from "../common/ses.mjs";
-import { toSingleLineString } from "../common/utils.mjs";
-import { MailParser } from "mailparser-mit";
+import commonS3 from "../../common/common-s3.mjs";
+import { toSingleLineString } from "../../common/utils.mjs";
+import { simpleParser } from "mailparser";
 
 export default {
   ...base,
@@ -15,20 +16,22 @@ export default {
     These events can trigger a Pipedream workflow and can be consumed via SSE or REST API.
   `),
   type: "source",
-  version: "1.0.3",
+  version: "1.2.2",
   props: {
     ...base.props,
     domain: {
       label: "SES Domain",
       description: "The domain you'd like to configure a catch-all handler for",
       type: "string",
-      options() {
-        return this.sesIdentities();
+      async options() {
+        const { Identities: identities } = await this.listIdentities();
+        return identities;
       },
     },
   },
   methods: {
     ...base.methods,
+    ...commonS3.methods,
     getReceiptRule(bucketName, topicArn) {
       const name = `pd-catchall-${uuid()}`;
       const rule = {
@@ -72,18 +75,13 @@ export default {
         const {
           bucketName: Bucket,
           objectKey: Key,
-        } = message?.receipt?.action;
-        const { Body } = await this.aws._getS3Client(this.getRegion()).getObject({
+        } = message.receipt.action;
+
+        const { Body } = await this.getObject({
           Bucket,
           Key,
-        })
-          .promise();
-        const parsed = await new Promise((resolve) => {
-          const mailparser = new MailParser();
-          mailparser.on("end", resolve);
-          mailparser.write(Body);
-          mailparser.end();
         });
+        const parsed = await simpleParser(Body);
         for (const attachment of parsed.attachments || []) {
           if (!attachment.content) continue;
           attachment.content_b64 = attachment.content.toString("base64");

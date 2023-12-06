@@ -1,16 +1,16 @@
 import notion from "../../notion.app.mjs";
-import utils from "../common/utils.mjs";
-import constants from "../common/constants.mjs";
+import base from "../common/base-page-builder.mjs";
 
 export default {
+  ...base,
   key: "notion-append-block",
   name: "Append Block to Parent",
-  description: "Creates and appends new children blocks to the parent *block_id* specified. [See the docs](https://developers.notion.com/reference/patch-block-children)",
-  version: "0.0.1",
+  description: "Creates and appends blocks to the specified parent. [See the documentation](https://developers.notion.com/reference/patch-block-children)",
+  version: "0.2.11",
   type: "action",
   props: {
     notion,
-    parentId: {
+    pageId: {
       propDefinition: [
         notion,
         "pageId",
@@ -18,50 +18,87 @@ export default {
       label: "Parent Block ID",
       description: "The identifier for the parent block",
     },
-    blockTypes: {
+    blockObjects: {
+      type: "string[]",
+      label: "Block Objects",
+      description: "This prop accepts an array of block objects to be appended. Using a custom expression in this prop is recommended.",
+      optional: true,
+    },
+    blockIds: {
       propDefinition: [
         notion,
-        "blockTypes",
+        "pageId",
       ],
+      type: "string[]",
+      label: "Block IDs",
+      description: "Contents of selected blocks will be appended",
+      optional: true,
     },
-  },
-  async additionalProps() {
-    return this.blockTypes.reduce((props, blockType) => ({
-      ...props,
-      ...constants.BLOCK_TYPES[blockType].additionalProps,
-    }), {});
-  },
-  methods: {
-    buildBlockArgs(blockType) {
-      switch (blockType) {
-      case constants.BLOCK_TYPES.paragraph.name:
-        return [
-          {
-            label: "rich_text",
-            value: this.paragraphText,
-          },
-        ];
-      case constants.BLOCK_TYPES.to_do.name:
-        return [
-          {
-            label: "rich_text",
-            value: this.todoText,
-          },
-          {
-            label: "checked",
-            value: this.todoChecked,
-          },
-        ];
-      default:
-        throw new Error("This block type is not yet supported");
-      }
+    markupContents: {
+      type: "string[]",
+      label: "Markup Contents",
+      description: "Content of new blocks to append. You must use Markdown syntax [See docs](https://www.notion.so/help/writing-and-editing-basics#markdown-&-shortcuts)",
+      optional: true,
+    },
+    imageUrls: {
+      type: "string[]",
+      label: "Image URLs",
+      description: "List of URLs to append as image blocks",
+      optional: true,
     },
   },
   async run({ $ }) {
-    const blocks = this.blockTypes
-      .map((block) => utils.buildBlock(block, this.buildBlockArgs(block)));
-    const response = await this.notion.appendBlock(this.parentId, blocks);
-    $.export("$summary", "Appended block(s) successfully");
-    return response;
+    const children = [];
+    // add blocks from blockObjects
+    if (this.blockObjects?.length > 0) {
+      for (const obj of this.blockObjects) {
+        const child = (typeof obj === "string")
+          ? JSON.parse(obj)
+          : obj;
+        children.push(child);
+      }
+    }
+
+    // add blocks from blockIds
+    if (this.blockIds?.length > 0) {
+      for (const id of this.blockIds) {
+        const block = await this.notion.retrieveBlock(id);
+        block.children = await this.notion.retrieveBlockChildren(block);
+        const formattedChildren = await this.formatChildBlocks(block);
+        children.push(...formattedChildren);
+      }
+    }
+
+    // add blocks from markup
+    if (this.markupContents?.length > 0) {
+      for (const content of this.markupContents) {
+        const block = this.createBlocks(content);
+        children.push(...block);
+      }
+    }
+
+    // add image blocks
+    if (this.imageUrls?.length) {
+      for (const url of this.imageUrls) {
+        children.push({
+          type: "image",
+          image: {
+            type: "external",
+            external: {
+              url,
+            },
+          },
+        });
+      }
+    }
+
+    if (children.length === 0) {
+      $.export("$summary", "Nothing to append");
+      return;
+    }
+
+    const { results } = await this.notion.appendBlock(this.pageId, children);
+    $.export("$summary", `Appended ${results.length} block(s) successfully`);
+    return results;
   },
 };

@@ -5,25 +5,20 @@ import salesforce from "../salesforce_rest_api.app.mjs";
 export default {
   dedupe: "unique",
   props: {
+    salesforce,
     db: "$.service.db",
     // eslint-disable-next-line pipedream/props-label,pipedream/props-description
     http: {
       type: "$.interface.http",
       customResponse: true,
     },
-    salesforce,
-    // Not inheriting `objectType` propDefinition from salesforce so `this` in async options has
-    // component instance's methods
     objectType: {
-      ...salesforce.propDefinitions.objectType,
-      label: salesforce.propDefinitions.objectType.label,
-      description: salesforce.propDefinitions.objectType.description,
-      async options(context) {
-        return salesforce.propDefinitions.objectType.options.call(this.salesforce, {
-          ...context,
-          eventType: this.getEventType(),
-        });
-      },
+      label: "Object Type",
+      description: "The type of object for which to monitor events",
+      propDefinition: [
+        salesforce,
+        "objectType",
+      ],
     },
   },
   hooks: {
@@ -44,6 +39,7 @@ export default {
           {
             fieldsToCheck: this.getFieldsToCheck(),
             fieldsToCheckMode: this.getFieldsToCheckMode(),
+            skipValidation: true, // neccessary for custom objects
           },
         );
       } catch (err) {

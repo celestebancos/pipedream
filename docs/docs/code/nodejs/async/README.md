@@ -5,6 +5,8 @@ thumbnail: https://res.cloudinary.com/pipedreamin/image/upload/v1646841376/docs/
 
 # Running asynchronous code in Node.js
 
+<VideoPlayer src="https://www.youtube.com/embed/6mmJyAW7kJI" title="Running asynchronous code in Node.js code steps" />
+
 If you're not familiar with asynchronous programming concepts like [callback functions](https://developer.mozilla.org/en-US/docs/Glossary/Callback_function) or [Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises), see [this overview](https://eloquentjavascript.net/11_async.html).
 
 [[toc]]
@@ -29,7 +31,7 @@ Most Node.js packages that run async code return Promises as the result of metho
 ```javascript
 const resp = axios({
   method: "GET",
-  url: `https://swapi.co/api/films/`,
+  url: `https://swapi.dev/api/films/`,
 });
 ```
 
@@ -38,7 +40,7 @@ It won't send the HTTP request, since **`axios` returns a Promise**. Instead, ad
 ```javascript
 const resp = await axios({
   method: "GET",
-  url: `https://swapi.co/api/films/`,
+  url: `https://swapi.dev/api/films/`,
 });
 ```
 

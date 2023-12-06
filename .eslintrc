@@ -1,13 +1,15 @@
 {
   "env": {
     "commonjs": true,
-    "es2021": true,
+    "es2020": true,
     "node": true
   },
   "extends": [
     "eslint:recommended",
-    "plugin:jsonc/recommended-with-jsonc"
+    "plugin:jsonc/recommended-with-jsonc",
+    "plugin:jest/recommended"
   ],
+  "ignorePatterns": ["scripts", "components/**/test-event.mjs"],
   "overrides": [
     {
       "files": [
@@ -31,7 +33,7 @@
         "pipedream/props-description": "warn",
         "pipedream/source-name": "warn",
         "pipedream/source-description": "warn",
-        "pipedream/no-ts-version": "error"
+        "pipedream/no-ts-version": "warn"
       }
     },
     {
@@ -72,6 +74,42 @@
       "rules": {
         "no-unused-vars": "off"
       }
+    },
+    {
+      "files": [
+        "*.ts",
+        "*.mts"
+      ],
+      "extends": [
+        "plugin:@typescript-eslint/recommended"
+      ],
+      "parser": "@typescript-eslint/parser",
+      "rules": {
+        "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+        "max-len": "off",
+        // note you must disable the base rule as it can report incorrect errors
+        "semi": "off",
+        "@typescript-eslint/semi": ["error"],
+        "@typescript-eslint/member-delimiter-style": ["error", {
+          "multiline": {
+            "delimiter": "semi",
+            "requireLast": true
+          },
+          "singleline": {
+            "delimiter": "semi",
+            "requireLast": true
+          },
+          "multilineDetection": "brackets",
+          "overrides": {
+            "interface": {
+              "multiline": {
+                "delimiter": "semi",
+                "requireLast": true
+              }
+            }
+          }
+        }]
+      }
     }
   ],
   "parserOptions": {
@@ -81,7 +119,9 @@
   "plugins": [
     "jsonc",
     "putout",
-    "pipedream"
+    "pipedream",
+    "@typescript-eslint",
+    "jest"
   ],
   "root": true,
   "rules": {
@@ -96,12 +136,6 @@
     "array-element-newline": [
       "error",
       "always"
-    ],
-    "camelcase": [
-      "error",
-      {
-        "properties": "never"
-      }
     ],
     "comma-dangle": [
       "error",
@@ -184,14 +218,6 @@
         "allowAllPropertiesOnSameLine": false
       }
     ],
-    "putout/for-of-multiple-properties-destructuring": "error",
-    "putout/multiple-properties-destructuring": [
-      "error",
-      {
-        "minProperties": 1
-      }
-    ],
-    "putout/single-property-destructuring": "error",
     "quote-props": [
       "error",
       "consistent"

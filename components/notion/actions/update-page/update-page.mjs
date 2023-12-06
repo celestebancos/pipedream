@@ -1,99 +1,91 @@
 import notion from "../../notion.app.mjs";
-import utils from "../common/utils.mjs";
+import base from "../common/base-page-builder.mjs";
+import pick from "lodash-es/pick.js";
 
 export default {
+  ...base,
   key: "notion-update-page",
   name: "Update Page",
-  description: "Updates page property values for the specified page. Properties that are not set via the properties parameter will remain unchanged. [See the docs](https://developers.notion.com/reference/patch-page)",
-  version: "0.0.1",
+  description: "Updates page property values for the specified page. Properties that are not set will remain unchanged. To append page content, use the *append block* action. [See the docs](https://developers.notion.com/reference/patch-page)",
+  version: "1.0.2",
   type: "action",
   props: {
     notion,
+    parent: {
+      propDefinition: [
+        notion,
+        "databaseId",
+      ],
+      label: "Parent Database ID",
+      description: "The identifier for a Notion parent database",
+      reloadProps: true,
+    },
     pageId: {
       propDefinition: [
         notion,
-        "pageId",
+        "pageIdInDatabase",
+        (c) => ({
+          databaseId: c.parent,
+        }),
       ],
     },
-    title: {
+    archived: {
       propDefinition: [
         notion,
-        "title",
+        "archived",
       ],
     },
-    iconType: {
+    metaTypes: {
       propDefinition: [
         notion,
-        "iconType",
+        "metaTypes",
       ],
     },
-    coverType: {
+    propertyTypes: {
       propDefinition: [
         notion,
-        "coverType",
+        "propertyTypes",
+        (c) => ({
+          parentId: c.parent,
+          parentType: "database",
+        }),
       ],
-    },
-    archive: {
-      type: "boolean",
-      label: "Archive page",
-      description: "Set to true to archive (delete) a page. Set to false to un-archive (restore) a page.",
-      optional: true,
     },
   },
   async additionalProps() {
-    let props = {};
-    if (this.iconType) {
-      props = {
-        ...props,
-        iconValue: {
-          type: "string",
-          label: "Icon Value",
-          description: "Icon value as an [emoji](https://developers.notion.com/reference/emoji-object)",
-        },
+    const { properties } = await this.notion.retrieveDatabase(this.parent);
+    const selectedProperties = pick(properties, this.propertyTypes);
+
+    return this.buildAdditionalProps({
+      properties: selectedProperties,
+      meta: this.metaTypes,
+    });
+  },
+  methods: {
+    ...base.methods,
+    /**
+     * Builds a page for a update operation
+     * @param page - the parent page
+     * @returns the constructed page in Notion format
+     */
+    buildPage(page) {
+      const meta = this.buildDatabaseMeta(page);
+      const properties = this.buildPageProperties(page.properties);
+      return {
+        ...meta,
+        properties,
       };
-    }
-    if (this.coverType) {
-      props = {
-        ...props,
-        coverValue: {
-          type: "string",
-          label: "Cover Value",
-          description: "Cover value as an [External URL](https://developers.notion.com/reference/file-object#external-file-objects)",
-        },
-      };
-    }
-    return props;
+    },
   },
   async run({ $ }) {
-    const params = {
-      properties: {},
-      archived: this.archive || undefined,
-    };
-
-    if (this.title) {
-      params.properties.title = {
-        title: utils.buildTextProperty(this.title),
-      };
+    try {
+      const currentPage = await this.notion.retrievePage(this.pageId);
+      const page = this.buildPage(currentPage);
+      const response = await this.notion.updatePage(this.pageId, page);
+      $.export("$summary", "Updated page successfully");
+      return response;
+    } catch (error) {
+      throw new Error(error.body);
     }
-
-    if (this.iconType) {
-      params.icon = {
-        type: this.iconType,
-        [this.iconType]: this.iconValue,
-      };
-    }
-
-    if (this.coverType) {
-      params.cover = {
-        type: this.coverType,
-        [this.coverType]: {
-          url: this.coverValue,
-        },
-      };
-    }
-
-    const response = await this.notion.updatePage(this.pageId, params);
-    $.export("$summary", "Updated page successfully");
-    return response;
   },
 };

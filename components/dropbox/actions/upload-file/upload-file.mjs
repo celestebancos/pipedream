@@ -1,15 +1,13 @@
 import dropbox from "../../dropbox.app.mjs";
-import consts from "../../consts.mjs";
+import consts from "../../common/consts.mjs";
 import fs from "fs";
-import got from "got";
-import common from "../common.mjs";
+import got from "got@13.0.0";
 
 export default {
-  ...common,
   name: "Upload a File",
   description: "Uploads a file to a selected folder. [See docs here](https://dropbox.github.io/dropbox-sdk-js/Dropbox.html#filesUpload__anchor)",
-  key: "dropbox-upload-a-file",
-  version: "0.0.1",
+  key: "dropbox-upload-file",
+  version: "0.0.10",
   type: "action",
   props: {
     dropbox,
@@ -22,7 +20,7 @@ export default {
     },
     name: {
       type: "string",
-      label: "Folder name",
+      label: "File name",
       description: "The name of your new file.",
     },
     fileUrl: {
@@ -51,7 +49,7 @@ export default {
     },
     strictConflict: {
       type: "boolean",
-      label: "Strict Ccnflict",
+      label: "Strict Conflict",
       description: "Be more strict about how each WriteMode detects conflict. For example, always return a conflict error when mode = WriteMode.update and the given \"rev\" doesn't match the existing file's \"rev\", even if the existing file has been deleted. This also forces a conflict even when the target path refers to a file with identical contents.",
       optional: true,
     },
@@ -80,7 +78,7 @@ export default {
       ? await got.stream(fileUrl)
       : fs.createReadStream(filePath);
 
-    let normalizedPath = this.getNormalizedPath(path, true);
+    let normalizedPath = this.dropbox.getNormalizedPath(path, true);
 
     const res = await this.dropbox.uploadFile({
       contents,

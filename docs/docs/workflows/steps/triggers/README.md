@@ -1,10 +1,12 @@
 # Triggers
 
-**Triggers** define the type of event that runs your workflow. For example, HTTP triggers expose a URL where you can send any HTTP requests. Pipedream will run your workflow on each request. The Cron Scheduler trigger runs your workflow on a schedule.
+<VideoPlayer url="https://www.youtube.com/embed/Jjq-ZoYZQoQ" title="Using Triggers" />
 
-Today, we support the following triggers: 
+**Triggers** define the type of event that runs your workflow. For example, HTTP triggers expose a URL where you can send any HTTP requests. Pipedream will run your workflow on each request. The Scheduler trigger runs your workflow on a schedule, like a cron job.
 
-- [Triggers for apps like Twitter, Github, and more](#app-based-triggers)
+Today, we support the following triggers:
+
+- [Triggers for apps like Twitter, GitHub, and more](#app-based-triggers)
 - [HTTP / Webhook](#http)
 - [Schedule](#schedule)
 - [Email](#email)
@@ -30,10 +32,9 @@ Search by **app name** to find triggers associated with your app. For Google Cal
 
 Once you select your trigger, you'll be asked to connect any necessary accounts (for example, Google Calendar sources require you authorize Pipedream access to your Google account), and enter the values for any configuration settings.
 
-Some sources are configured to retrieve an initial set of events when they're created. Others require you to generate events in the app to trigger your workflow. If your source generates an initial set of events, you'll see them appear in the **Select events** dropdown in the ***Select Event** step:
+Some sources are configured to retrieve an initial set of events when they're created. Others require you to generate events in the app to trigger your workflow. If your source generates an initial set of events, you'll see them appear in the **Select events** dropdown in the **Select Event** step:
 
 ![Choose an event to test your workflow steps against](https://res.cloudinary.com/pipedreamin/image/upload/v1647957381/docs/components/CleanShot_2022-03-22_at_09.55.57_2x_upj35r.png)
-
 
 Then you can select a specific test event and manually trigger your workflow with that event data by clicking **Send Test Event**. Now you're ready to build your workflow with the selected test event.
 
@@ -49,14 +50,13 @@ For example, you might create a single source to listen for new Twitter mentions
 
 Moreover, you can access events emitted by sources using Pipedream's [SSE](/api/sse/) and [REST APIs](/api/rest/). This allows you to access these events in your own app, outside Pipedream's platform.
 
-### Dependent and Independent Sources
+### Can I add multiple triggers to a workflow
 
-In order to reduce unintentional workflow invocations, certain sources are classified as "dependent" and will mirror the state of their parent workflow. For example,
+Yes, you can add any number of triggers to a workflow. Click the top right menu in the trigger step and select **Add trigger**.
 
-- When adding a source to a new workflow, that source will initially be set as dependent. If you pause or delete the workflow, that source will also be paused or deleted. If you re-enable the workflow after pausing it, the source will be re-enabled as well.
-- If you add that same source to another workflow, or create a workflow then later remove and add a different source, the source will be independent from the workflow, which means pausing, re-enabling, or deleting the workflow will not impact the source.
-
-There is not currently any user-facing indication for dependent vs. independent sources at this time.
+<div>
+<img src="./images/add-multi-trigger.gif" alt="Add multiple triggers to a workflow" />
+</div>
 
 ### Shape of the `steps.trigger.event` object
 
@@ -76,6 +76,12 @@ Pipedream creates a URL endpoint specific to your workflow:
 
 You can send any HTTP requests to this endpoint, from anywhere on the web. You can configure the endpoint as the destination URL for a webhook or send HTTP traffic from your application - we'll accept any [valid HTTP request](#valid-requests).
 
+::: tip Custom domains
+
+Pipedream also supports [custom domains](/workflows/domains). This lets you host endpoints on `https://endpoint.yourdomain.com` instead of the default `{{$site.themeConfig.ENDPOINT_BASE_URL}}` domain.
+
+:::
+
 ### Accessing HTTP request data
 
 You can access properties of the HTTP request, like the method, payload, headers, and more, in [the `event` object](/workflows/events/#event-format), accessible in any [code](/code/) or [action](/components#actions) step.
@@ -91,6 +97,10 @@ You can send data to any path on this host, with any query string parameters. Yo
 You can send data of any [Media Type](https://www.iana.org/assignments/media-types/media-types.xhtml) in the body of your request.
 
 The primary limit we impose is on the size of the request body: we'll issue a `413 Payload Too Large` status when the body [exceeds our specified limit](#request-entity-too-large).
+
+### Custom domains
+
+To configure endpoints on your own domain, e.g. `endpoint.yourdomain.com` instead of the default `{{$site.themeConfig.ENDPOINT_BASE_URL}}` domain, see the [custom domains](/workflows/domains) docs.
 
 ### How Pipedream handles JSON payloads
 
@@ -116,6 +126,12 @@ Pipedream will convert that to a JavaScript object, `event.body`, with the follo
   title: "General",
 }
 ```
+
+### How Pipedream handles HTTP headers
+
+HTTP request headers will be available in the `steps.trigger.event.headers` steps export in your downstream steps.
+
+Pipedream will automatically lowercase header keys for consistency.
 
 #### Limits
 
@@ -268,7 +284,20 @@ When you're processing HTTP requests, you often don't need to issue any special 
 
 #### Customizing the HTTP response
 
-If you need to issue a custom HTTP response from a workflow, **you can use the `$.respond()` function in a Code or Action step**.
+If you need to issue a custom HTTP response from a workflow, you can either:
+
+- Use the **Return HTTP response** action, available on the **HTTP / Webhook** app, or
+- **Use the `$.respond()` function in a Code or Action step**.
+
+#### Using the HTTP Response Action
+
+The HTTP Response action lets you return HTTP responses without the need to write code. You can customize the response status code, and optionally specify response headers and body.
+
+This action uses `$.respond()` and will always [respond immediately](#returning-a-response-immediately) when called in your workflow. A [response error](#errors-with-http-responses) will still occur if your workflow throws an Error before this action runs.
+
+#### Using custom code with `$.respond()`
+
+You can return HTTP responses in Node.js code with the `$.respond()` function.
 
 `$.respond()` takes a single argument: an object with properties that specify the body, headers, and HTTP status code you'd like to respond with:
 
@@ -280,13 +309,9 @@ defineComponent({
       headers: { "my-custom-header": "value" },
       body: { message: "My custom response" }, // This can be any string, object, Buffer, or Readable stream
     });
-  }
+  },
 });
 ```
-
-:::warning
-The `$.respond` function is currently only available in Node.js (Javascript) workflow steps.
-:::
 
 The value of the `body` property can be either a string, object, a [Buffer](https://nodejs.org/api/buffer.html#buffer_buffer) (binary data), or a [Readable stream](https://nodejs.org/api/stream.html#stream_readable_streams). Attempting to return any other data may yield an error.
 
@@ -295,8 +320,6 @@ In the case where you return a Readable stream:
 - You must `await` the `$.respond` function (`await $.respond({ ... }`)
 - The stream must close and be finished reading within your [workflow execution timeout](/limits/#time-per-execution).
 - You cannot return a Readable and use the [`immediate: true`](#returning-a-response-immediately) property of `$.respond`.
-
-You can **Copy** [this example workflow](https://pipedream.com/@dylburger/issue-an-http-response-from-a-workflow-p_ljCRdv/edit) and make an HTTP request to its endpoint URL to experiment with this.
 
 #### Timing of `$.respond()` execution
 
@@ -317,7 +340,7 @@ defineComponent({
       headers: { "my-custom-header": "value" },
       body: { message: "My custom response" },
     });
-  }
+  },
 });
 ```
 
@@ -333,7 +356,7 @@ defineComponent({
       status: 200,
       body: "",
     });
-  }
+  },
 });
 ```
 
@@ -362,7 +385,7 @@ defineComponent({
   async run({ steps, $ }) {
     try {
       // Your code here that might throw an exception or not run
-      throw new Error('Whoops, something unexpected happened.');
+      throw new Error("Whoops, something unexpected happened.");
     } finally {
       await $.respond({
         status: 200,
@@ -371,7 +394,7 @@ defineComponent({
         },
       });
     }
-  }
+  },
 });
 ```
 
@@ -415,39 +438,26 @@ Since you can [run any code](/code/) in a workflow, you can implement more compl
 
 ## Schedule
 
-Pipedream allows you to run hosted scheduled jobs — commonly-referred to as a "cron job" — [for free](/pricing/).
+Pipedream allows you to run hosted scheduled jobs — commonly-referred to as a "cron job" — [for free](/pricing/). You can think of workflows like scripts that run on a schedule.
 
-We call these cron jobs "[workflows](/workflows/)". Workflows are just scripts that run on a schedule.
+You can write scheduled job to send an HTTP request, send a scheduled email, run any Node.js or Python code, connect to any API, and much more. Pipedream manages the servers where these jobs run, so you don't have to worry about setting up a server of your own or operating some service just to run code on a schedule. You write the workflow, we take care of the rest.
 
-You can write a cron job to:
+### Choosing a Schedule trigger
 
-- [Send an HTTP request to any URL on a schedule](https://pipedream.com/@dylburger/send-an-http-post-request-on-a-schedule-p_KwCYBx/readme)
-- [Send a scheduled message to email](https://pipedream.com/@dylburger/541cd2a9ef220f04fefa8f2d440c38d2-p_q6CMjp/readme), Slack, Discord, or any messaging app
-- Pull data from an API, process it, and send the results to Slack, or even data stores like Amazon S3
-- [Run any Node.js (JavaScript) code, using almost any npm package](https://pipedream.com/@dylburger/email-the-top-story-from-hacker-news-every-day-p_JZC28O/readme). **This lets you do almost anything you want on a schedule**.
-
-Pipedream manages the servers where these cron jobs run, so you don't have to worry about setting up a server of your own or operating some service just to run code on a schedule. You write the workflow, we take care of the rest.
-
-### Choosing a cron trigger
-
-To create a cron job, create a new workflow and search for the **Schedule** trigger:
+To create a new scheduled job, create a new workflow and search for the **Schedule** trigger:
 
 <div>
 <img alt="Cron Scheduler source" width="400px" src="./images/schedule.png">
 </div>
 
-By default, your cron job will be turned **Off**. **To enable it, select either of the scheduling options**:
+By default, your trigger will be turned **Off**. **To enable it, select either of the scheduling options**:
 
 - **Every** : run the job every N days, hours, minutes (e.g. every 1 day, every 3 hours).
 - **Cron Expression** : schedule your job using a cron expression. For example, the expression `0 0 * * *` will run the job every day at midnight. Cron expressions can be tied to any timezone.
 
-### Testing a cron job
+### Testing a scheduled job
 
-If you're running a cron job once a day, you probably don't want to wait until the next day's run to test your new code. You can manually run the workflow associated with a cron job at any time by pressing the **Run Now** button.
-
-### Future executions of your cron job
-
-You'll see the time your job is scheduled to run next under the **Next Job** section of the [Inspector](/workflows/events/inspect/).
+If you're running a scheduled job once a day, you probably don't want to wait until the next day's run to test your new code. You can manually run the workflow associated with a scheduled job at any time by pressing the **Run Now** button.
 
 ### Job History
 
@@ -463,15 +473,11 @@ If you'd like to email yourself when a job finishes successfully, you can use th
 
 You can also [write code](/code/) to trigger any complex notification logic you'd like.
 
-### Rate Limit
-
-When you're testing cron jobs, you may encounter **Rate Limit Exceeded** errors. Cron jobs can be tested no more than twice a minute. If you encounter this error, wait one minute and try again.
-
 ### Troubleshooting your scheduled jobs
 
-When you run a cron job, you may need to troubleshoot errors or other execution issues. Pipedream offers built-in, step-level logs that show you detailed execution information that should aid troubleshooting.
+When you run a scheduled job, you may need to troubleshoot errors or other execution issues. Pipedream offers built-in, step-level logs that show you detailed execution information that should aid troubleshooting.
 
-Any time a cron job runs, you'll see a new execution appear in the [Inspector](/workflows/events/inspect/). This shows you when the cron job ran, how long it took to run, and any errors that might have occurred. **Click on any of these lines in the Inspector to view the details for a given run**.
+Any time a scheduled job runs, you'll see a new execution appear in the [Inspector](/workflows/events/inspect/). This shows you when the job ran, how long it took to run, and any errors that might have occurred. **Click on any of these lines in the Inspector to view the details for a given run**.
 
 Code steps show [logs](/code/nodejs/#logs) below the step itself. Any time you run `console.log()` or other functions that print output, you should see the logs appear directly below the step where the code ran.
 
@@ -543,6 +549,16 @@ this.parsed = await simpleParser(f);
 
 Your email is saved to a Pipedream-owned [Amazon S3 bucket](https://aws.amazon.com/s3/). Pipedream generates a [signed URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) that allows you to access to that file for up to 30 minutes. After 30 minutes, the signed URL will be invalidated, and the file will be deleted.
 
+### Email attachments
+
+You can attach any files to your email, up to [the total email size limit](/limits/#email-triggers).
+
+Attachments are stored in `steps.trigger.event.attachments`, which provides an array of attachment objects. Each attachment in that array exposes key properties:
+
+- `contentUrl`: a URL that hosts your attachment. You can [download this file to the `/tmp` directory](/code/nodejs/http-requests/#download-a-file-to-the-tmp-directory) and process it in your workflow.
+- `content`: If the attachment contains text-based content, Pipedream renders the attachment in `content`, up to 10,000 bytes.
+- `contentTruncated`: `true` if the attachment contained text-based content larger than 10,000 bytes. If `true`, the data in `content` will be truncated, and you should fetch the full attachment from `contentUrl`.
+
 ### Appending metadata to the incoming email address with `+data`
 
 Pipedream provides a way to append metadata to incoming emails by adding a `+` sign to the incoming email key, followed by any arbitrary string:
@@ -572,19 +588,6 @@ This will create an RSS [event source](/sources/) that polls the feed for new it
 
 ## Don't see a trigger you need?
 
-If you don't see a trigger you'd like us to support, please [let us know](https://pipedream.com/community/).
-
-## Multiple triggers for one workflow
-
-Want to trigger a workflow on a schedule, but at the same time trigger it on demand with a Slack message? Yes this is possible and yes it's very cool.
-
-Click the top right menu in the trigger itself, and select "Add trigger".
-
-Now you can add an additional trigger to the same workflow, opening up multiple ways that a workflow can be started.
-
-<div>
-<img src="./images/add-multi-trigger.gif" alt="Add multiple triggers to a workflow" />
-</div>
+If you don't see a trigger you'd like us to support, please [let us know](https://pipedream.com/support/).
 
 <Footer />
-

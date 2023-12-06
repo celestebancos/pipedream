@@ -9,7 +9,7 @@ HTTP Destinations allow you to send data to another HTTP endpoint URL outside of
 You can send HTTP requests in [Node.js code steps](/code/nodejs/) using `$.send.http()`.
 
 ```javascript
-defineComponent({
+export default defineComponent({
  async run({ steps, $ }) {
   $.send.http({
     method: "POST",
@@ -17,7 +17,7 @@ defineComponent({
     data: {
       name: "Luke Skywalker",
     },
-  });  
+  });
  })
 });
 ```
@@ -25,7 +25,7 @@ defineComponent({
 `$.send.http()` accepts an object with all of the following properties:
 
 ```javascript
-defineComponent({
+export default defineComponent({
   async run({ steps, $ }) {
     $.send.http({
       method, // Required, HTTP method, a string, e.g. POST, GET
@@ -34,19 +34,19 @@ defineComponent({
       headers, // An object containing custom headers, e.g. { "Content-Type": "application/json" }
       params, // An object containing query string parameters as key-value pairs
       auth, // An object that contains a username and password property, for HTTP basic auth
-    });  
+    });
   })
 });
 
 ```
 
-**Destination delivery is asynchronous**: the HTTP requests are sent after your workflow finishes. This means **you cannot write code that operates on the HTTP response**. The benefit of using `$.send.http()`, though, is that these HTTP requests also don't count against your [compute time quota](/limits/#compute-time-per-day) on the [free tier](/pricing/#developer-tier).
+**Destination delivery is asynchronous**: the HTTP requests are sent after your workflow finishes. This means **you cannot write code that operates on the HTTP response**. These HTTP requests **do not** count against your workflow's compute time.
 
 If you iterate over an array of values and send an HTTP request for each:
 
 ```javascript
 
-defineComponent({
+export default defineComponent({
   async run({ steps, $ }) {
     const names = ["Luke", "Han", "Leia", "Obi Wan"];
     names.forEach((name) => {
@@ -71,7 +71,7 @@ If you're authoring a [component action](/components#actions), you can deliver d
 `$.send.http` functions the same as [`$.send.http` in workflow code steps](#using-send-http-in-workflows):
 
 ```javascript
-defineComponent({
+export default defineComponent({
   async run({ steps, $ }) {
       $.send.http({
         method: "GET",
@@ -103,7 +103,7 @@ If you need to access the HTTP response data in your workflow, [use `axios`](/co
 
 The timeout on HTTP request sent with `$.send.http()` is currently **5 seconds**. This time includes DNS resolution, connecting to the host, writing the request body, server processing, and reading the response body.
 
-Any requests that exceed 5 seconds will yield a `timeout` error. 
+Any requests that exceed 5 seconds will yield a `timeout` error.
 
 ## Retries
 
@@ -118,7 +118,7 @@ When you make an HTTP request using `$.send.http()`, the traffic will come from 
 This list may change over time. If you've previously whitelisted these IP addresses and are having trouble sending HTTP requests to your target service, please check to ensure this list matches your firewall rules.
 
 ::: warning
-These IP addresses are tied specifically to the `$.send.http()` service. If you send traffic directly from a workflow, it will be sent from one of Pipedream's general range of IP addresses. [See our networking docs for more information](/workflows/networking/).
+These IP addresses are tied specifically to the `$.send.http()` service. If you send traffic directly from a workflow, it will be sent from one of Pipedream's general range of IP addresses. [See our hosting docs for more information](/privacy-and-security/#hosting-details).
 :::
 
 <Footer />

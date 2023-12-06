@@ -1,9 +1,10 @@
 import dropbox from "dropbox";
 import fetch from "isomorphic-fetch";
 import get from "lodash/get.js";
-import config from "./config.mjs";
+import config from "./common/config.mjs";
 import isString from "lodash/isString.js";
 import isEmpty from "lodash/isEmpty.js";
+import isNil from "lodash/isNil.js";
 
 const Dropbox = dropbox.Dropbox;
 
@@ -14,17 +15,27 @@ export default {
     pathFolder: {
       type: "string",
       label: "Path",
-      description: "The folder path. (Please use a valid path to filter the values)",
+      description: "The folder path. (Please use a valid path to filter the values and type at least 2 characters after the latest '/' to perform the search.)",
       useQuery: true,
       withLabel: true,
       async options({
+        prevContext,
         query,
         returnSimpleString,
+        omitRootFolder,
       }) {
-        return this.getPathOptions(query, {
-          omitFiles: true,
-          returnSimpleString,
-        });
+        if (prevContext?.reachedLastPage) {
+          return [];
+        }
+        return this.getPathOptions(
+          query,
+          prevContext?.cursor,
+          {
+            omitFiles: true,
+            returnSimpleString,
+            omitRootFolder,
+          },
+        );
       },
     },
     pathFile: {
@@ -34,13 +45,23 @@ export default {
       useQuery: true,
       withLabel: true,
       async options({
+        prevContext,
         query,
         returnSimpleString,
+        omitRootFolder,
       }) {
-        return this.getPathOptions(query, {
-          omitFolders: true,
-          returnSimpleString,
-        });
+        if (prevContext?.reachedLastPage) {
+          return [];
+        }
+        return this.getPathOptions(
+          query,
+          prevContext?.cursor,
+          {
+            omitFolders: true,
+            returnSimpleString,
+            omitRootFolder,
+          },
+        );
       },
     },
     pathFileFolder: {
@@ -50,12 +71,22 @@ export default {
       useQuery: true,
       withLabel: true,
       async options({
+        prevContext,
         query,
         returnSimpleString,
+        omitRootFolder,
       }) {
-        return this.getPathOptions(query, {
-          returnSimpleString,
-        });
+        if (prevContext?.reachedLastPage) {
+          return [];
+        }
+        return this.getPathOptions(
+          query,
+          prevContext?.cursor,
+          {
+            returnSimpleString,
+            omitRootFolder,
+          },
+        );
       },
     },
     fileRevision: {
@@ -87,6 +118,25 @@ export default {
     },
   },
   methods: {
+    getPath(path) {
+      return Object.prototype.hasOwnProperty.call(path, "value")
+        ? path.value
+        : path;
+    },
+    getNormalizedPath(path, appendFinalBar) {
+      let normalizedPath = this.getPath(path);
+
+      // Check for empties path
+      if (isNil(normalizedPath) || isEmpty(normalizedPath)) {
+        normalizedPath = "/";
+      }
+
+      if (appendFinalBar && normalizedPath[normalizedPath.length - 1] !== "/") {
+        normalizedPath += "/";
+      }
+
+      return normalizedPath;
+    },
     async sdk() {
       const baseClientOpts = {
         accessToken: this.$auth.oauth_access_token,
@@ -142,93 +192,119 @@ export default {
         this.normalizeError(err);
       }
     },
-    async getPathOptions(path, opts = {}) {
+    async getPathOptions(path, prevCursor, opts = {}) {
       try {
         const {
           omitFolders,
           omitFiles,
+          omitRootFolder,
         } = opts;
 
-        const LIMIT = 100;
-
         let data = [];
-        let cursor = null;
+        let res = null;
         path = path === "/" || path === null
           ? ""
           : path;
+
+        if (path.length > 0 && !path.startsWith("/")) {
+          path = "/" + path;
+        }
+
         const dpx = await this.sdk();
+        if (path === "") {
+          res = await dpx.filesListFolder({
+            path,
+            limit: config.GET_PATH_OPTIONS.DEFAULT_MAX_RESULTS,
+            recursive: true,
+          });
 
-        let res = await dpx.filesListFolder({
-          path,
-          limit: LIMIT,
-          recursive: true,
-        });
-
-        if (!res.result.has_more) {
-          data = res.result.entries.map((folder) => ({
-            label: folder.path_display,
-            value: {
-              path: folder.path_lower,
-              type: folder[".tag"],
-            },
+          data = res.result.entries.map((item) => ({
+            path: item.path_display,
+            type: item[".tag"],
           }));
         } else {
-          data = res.result.entries.map((folder) => ({
-            label: folder.path_display,
-            value: {
-              path: folder.path_lower,
-              type: folder[".tag"],
+          let subpath = "";
+          let query = path;
+          if ((path.match(/\//g) || []).length > 1) {
+            const splitPath = path.split("/");
+            query = splitPath.pop();
+            subpath = splitPath.join("/");
+          }
+          res = await this.searchFilesFolders({
+            query,
+            options: {
+              path: subpath,
             },
+          });
+
+          data = res.map(({ metadata }) => ({
+            path: metadata.metadata.path_display,
+            type: metadata.metadata[".tag"],
           }));
-          cursor = res.result.cursor;
-          do {
-            const res = await dpx.filesListFolderContinue({
-              cursor,
+
+          const folders = data.filter((item) => item.type !== "file");
+          for (const folder of folders) {
+            res = await dpx.filesListFolder({
+              path: folder.path,
+              recursive: true,
             });
-            data = data.concat(res.result?.entries.map((folder) => ({
-              label: folder.path_display,
-              value: {
-                path: folder.path_lower,
-                type: folder[".tag"],
-              },
-            })));
-            cursor = res.result.cursor;
-            if (!res.result.has_more) {
-              break;
-            }
-          } while (true);
+            const folderData = res.result?.entries?.map((item) => ({
+              path: item.path_display,
+              type: item[".tag"],
+            }));
+            data.push(...folderData);
+          }
         }
 
         if (omitFiles) {
-          data = data.filter((item) => item.value.type !== "file");
+          data = data.filter((item) => item.type !== "file");
         }
 
         if (omitFolders) {
-          data = data.filter((item) => item.value.type !== "folder");
+          data = data.filter((item) => item.type !== "folder");
         }
 
         data = data.map((item) => ({
-          label: item.label,
-          value: item.value.path,
+          label: item.path,
+          value: item.path,
         }));
 
-        return data.sort((a, b) => a.label > b.label
-          ? 1 :
-          -1);
+        if (path === "" && !omitFolders && !omitRootFolder) {
+          data = [
+            {
+              label: "Root Folder",
+              value: "",
+            },
+            ...data,
+          ];
+        }
+
+        data.sort((a, b) => {
+          return a > b ?
+            1 :
+            -1;
+        });
+
+        return data;
+
       } catch (err) {
-        this.normalizeError(err);
+        console.log(err);
+        return [];
       }
     },
     async initState(context) {
       const {
         path,
         recursive,
-        db,
       } = context;
       try {
-        const fixedPath = path == "/"
-          ? ""
-          : path;
+        let fixedPath = path == "/" ?
+          "" :
+          path;
+        fixedPath = typeof (fixedPath) === "object" ?
+          fixedPath.value :
+          fixedPath;
+
         const dpx = await this.sdk();
         let response = await dpx.filesListFolderGetLatestCursor({
           path: fixedPath,
@@ -239,48 +315,47 @@ export default {
         }
         const { cursor } = response;
         const state = {
-          path,
+          path: fixedPath,
           recursive,
           cursor,
         };
-        db.set("dropbox_state", state);
         return state;
       } catch (err) {
         console.log(err);
-        throw `Error connecting to Dropbox API to get latest cursor for folder: ${path}${
-          recursive
-            ? " (recursive)"
-            : ""
+        throw `Error connecting to Dropbox API to get latest cursor for folder: ${path}${recursive
+          ? " (recursive)"
+          : ""
         }`;
       }
     },
-    async getState(context) {
+    async getState(context, state) {
       const {
         path,
         recursive,
-        db,
       } = context;
-      let state = db.get("dropbox_state");
-      if (state == null || state.path != path || state.recursive != recursive) {
+      const fixedPath = typeof (path) === "object" ?
+        path.value :
+        path;
+      if (state == null || state.path != fixedPath || state.recursive != recursive) {
         state = await this.initState(context);
       }
       return state;
     },
-    async getUpdates(context) {
+    async getUpdates(context, dbState) {
       let ret = [];
-      const state = await this.getState(context);
+      const state = await this.getState(context, dbState);
       if (state) {
         try {
-          const { db } = context;
           let [
             cursor,
             hasMore,
             entries,
-          ] = [
-            state.cursor,
-            true,
-            null,
-          ];
+          ] =
+            [
+              state.cursor,
+              true,
+              null,
+            ];
           while (hasMore) {
             const dpx = await this.sdk();
             let response = await dpx.filesListFolderContinue({
@@ -297,13 +372,15 @@ export default {
             ret = ret.concat(entries);
           }
           state.cursor = cursor;
-          db.set("dropbox_state", state);
         } catch (err) {
           console.log(err);
           throw `Error connecting to Dropbox API to get list of updated files/folders for cursor: ${state.cursor}`;
         }
       }
-      return ret;
+      return {
+        ret,
+        state,
+      };
     },
     async createFolder(args) {
       try {

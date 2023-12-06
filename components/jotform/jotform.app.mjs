@@ -1,5 +1,7 @@
 import { axios } from "@pipedream/platform";
-import querystring from "querystring";
+import querystring from "query-string";
+import crypto from "crypto";
+import constants from "./common/constants.mjs";
 
 export default {
   type: "app",
@@ -72,6 +74,18 @@ export default {
       description: "Maximum number of items to return",
       default: 20,
     },
+    encrypted: {
+      type: "boolean",
+      label: "Encrypted",
+      description: "Are the form responses encrypted? Set to `true` to decrypt responses.",
+      optional: true,
+    },
+    privateKey: {
+      type: "string",
+      label: "Private Key",
+      description: "The private key provided/created when setting the form as encrypted. Starts with `-----BEGIN RSA PRIVATE KEY-----` and ends with `-----END RSA PRIVATE KEY-----`",
+      secret: true,
+    },
   },
   methods: {
     _getBaseUrl() {
@@ -140,42 +154,85 @@ export default {
         method: "DELETE",
       });
     },
+    async getForm(formId) {
+      return this._makeRequest({
+        endpoint: `form/${formId}`,
+      });
+    },
     async getForms(params) {
       return this._makeRequest({
         endpoint: "user/forms",
-        method: "GET",
         params,
       });
     },
+    getFormSubmission({
+      $, submissionId,
+    }) {
+      return this._makeRequest({
+        $,
+        endpoint: `submission/${submissionId}`,
+      });
+    },
     async getFormSubmissions({
-      $, formId,
+      $, formId, params = null,
     }) {
       return this._makeRequest({
         $,
         endpoint: `form/${formId}/submissions`,
-        method: "GET",
+        params,
       });
     },
     async getUserSubmissions({ $ }) {
       return this._makeRequest({
         $,
         endpoint: "user/submissions",
-        method: "GET",
       });
     },
     async getUserUsage({ $ }) {
       return this._makeRequest({
         $,
         endpoint: "user/usage",
-        method: "GET",
       });
     },
     async getWebhooks(opts = {}) {
       const { formId } = opts;
       return this._makeRequest({
         endpoint: `form/${encodeURIComponent(formId)}/webhooks`,
-        method: "GET",
       });
+    },
+    decryptSubmission(submission, privateKey) {
+      const { answers } = submission;
+      if (!answers) {
+        return submission;
+      }
+
+      if (!privateKey.includes(`${constants.KEY_HEADER}\n`)) {
+        privateKey = privateKey.replace(constants.KEY_HEADER, `${constants.KEY_HEADER}\n`);
+      }
+      if (!privateKey.includes(`\n${constants.KEY_FOOTER}`)) {
+        privateKey = privateKey.replace(constants.KEY_FOOTER, `\n${constants.KEY_FOOTER}`);
+      }
+
+      for (const answer of Object.keys(answers)) {
+        if (!answers[answer]["answer"]) {
+          continue;
+        }
+        for (const question of Object.keys(answers[answer]["answer"])) {
+          const q = answers[answer]["answer"][question];
+          try {
+            const decrypted = crypto.privateDecrypt({
+              key: privateKey,
+              passphrase: "",
+              padding: crypto.constants.RSA_PKCS1_PADDING,
+            }, Buffer.from(q, "base64"));
+            answers[answer]["answer"][question] = decrypted.toString("utf8");
+          } catch (e) {
+            // not a base64 string
+            continue;
+          }
+        }
+      }
+      return submission;
     },
   },
 };

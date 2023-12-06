@@ -18,7 +18,14 @@ module.exports = {
         stripExtension: true,
       },
     ],
-    "check-md"
+    "check-md",
+    "tabs",
+    ['vuepress-plugin-code-copy', {
+      color: '#34d28b',
+      backgroundColor: '#34d28b',
+      backgroundTransition: false,
+      successText: 'Copied'
+    }]
   ],
   themeConfig,
   postcss: {

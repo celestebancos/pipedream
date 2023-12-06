@@ -1,6 +1,6 @@
 # Actions
 
-Actions are reusable code steps that integrate your apps, data and APIs. For example, you can send HTTP requests to an external service using our HTTP actions, or use our Google Sheets actions to add new data. You can use thousands of actions across 400+ apps today.
+Actions are reusable code steps that integrate your apps, data and APIs. For example, you can send HTTP requests to an external service using our HTTP actions, or use our Google Sheets actions to add new data. You can use thousands of actions across {{$site.themeConfig.PUBLIC_APPS}}+ apps today.
 
 Typically, integrating with these services requires custom code to manage connection logic, error handling, and more. Actions handle that for you. You only need to specify the parameters required for the action. For example, the HTTP `GET` Request action requires you enter the URL whose data you want to retrieve.
 
@@ -34,7 +34,7 @@ You can author your own actions on Pipedream, too. Anytime you need to reuse the
 
 Start with our [action development quickstart](/components/quickstart/nodejs/actions/). You can read more about all the capabilities of actions in [our API docs](/components/api/), and review [example actions here](/components/api/#example-components).
 
-You can also publish actions to [the Pipedream registry](/components/guidelines/#pipedream-registry), which makes them available for anyone on Pipedream to use.
+You can also publish actions to [the Pipedream registry](/apps/contributing/), which makes them available for anyone on Pipedream to use.
 
 ## Reporting a bug / feature request
 

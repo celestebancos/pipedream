@@ -1,12 +1,13 @@
 import base from "../common/base.mjs";
+import sampleEmit from "./test-event.mjs";
 import constants from "../common/constants.mjs";
 
 export default {
   ...base,
   key: "notion-new-database",
   name: "New Database",
-  description: "Emit new event when a database is created",
-  version: "0.0.1",
+  description: "Emit new event when a database is created. Note: Databases must be shared with your Pipedream Integtration to trigger event.",
+  version: "0.0.7",
   type: "source",
   async run() {
     const databases = [];
@@ -42,4 +43,5 @@ export default {
       this.setLastCreatedTimestamp(Date.parse(lastCreatedTime));
     }
   },
+  sampleEmit,
 };

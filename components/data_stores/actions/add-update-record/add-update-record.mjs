@@ -1,30 +1,34 @@
-// eslint-disable-next-line camelcase
-import data_stores from "../../data_stores.app.mjs";
+import app from "../../data_stores.app.mjs";
 
 export default {
   key: "data_stores-add-update-record",
   name: "Add or update a single record",
   description: "Add or update a single record in your [Pipedream Data Store](https://pipedream.com/data-stores/).",
-  version: "0.0.3",
+  version: "0.0.9",
   type: "action",
   props: {
-    data_stores,
-    data_store: {
+    app,
+    dataStore: {
       propDefinition: [
-        // eslint-disable-next-line camelcase
-        data_stores,
-        "data_store",
+        app,
+        "dataStore",
       ],
     },
     key: {
-      label: "Key",
-      type: "string",
-      description: "Key for the data you'd like to add or update. Refer to your existing keys [here](https://pipedream.com/data-stores/).",
+      propDefinition: [
+        app,
+        "key",
+        ({ dataStore }) => ({
+          dataStore,
+        }),
+      ],
+      description: "Enter a key for the record you'd like to create or select an existing key to update.",
     },
     value: {
-      label: "Value",
-      type: "any",
-      description: "Enter a string, object, or array.",
+      propDefinition: [
+        app,
+        "value",
+      ],
     },
   },
   async run({ $ }) {
@@ -32,24 +36,14 @@ export default {
       key,
       value,
     } = this;
-    const record = this.data_store.get(key);
-    let parsedValue;
-    if (typeof value !== "string") {
-      parsedValue = value;
-    } else {
-      try {
-        let json = this.data_stores.sanitizeJson(value);
-        parsedValue = JSON.parse(json);
-      } catch (err) {
-        parsedValue = value;
-      }
-    }
-    this.data_store.set(key, parsedValue);
+    const exists = await this.dataStore.has(key);
+    const parsedValue = this.app.parseValue(value);
+    await this.dataStore.set(key, parsedValue);
     // eslint-disable-next-line multiline-ternary
-    $.export("$summary", `Successfully ${record ? "updated the record for" : "added a new record with the"} key, \`${key}\`.`);
+    $.export("$summary", `Successfully ${exists ? "updated the record for" : "added a new record with the"} key, \`${key}\`.`);
     return {
       key,
-      value,
+      value: parsedValue,
     };
   },
 };

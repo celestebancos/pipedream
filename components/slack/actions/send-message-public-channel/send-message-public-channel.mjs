@@ -1,24 +1,36 @@
-import common from "../send-message-common.mjs";
+import common from "../common/send-message.mjs";
+import constants from "../../common/constants.mjs";
 
 export default {
   ...common,
   key: "slack-send-message-public-channel",
   name: "Send Message to a Public Channel",
-  description: "Send a message to a public channel and customize the name and avatar of the bot that posts the message",
-  version: "0.2.1",
+  description: "Send a message to a public channel and customize the name and avatar of the bot that posts the message. See [postMessage](https://api.slack.com/methods/chat.postMessage) or [scheduleMessage](https://api.slack.com/methods/chat.scheduleMessage) docs here",
+  version: "0.2.17",
   type: "action",
   props: {
-    ...common.props,
+    slack: common.props.slack,
     conversation: {
       propDefinition: [
         common.props.slack,
-        "publicChannel",
+        "channelId",
+        () => ({
+          types: [
+            constants.CHANNEL_TYPE.PUBLIC,
+          ],
+        }),
       ],
     },
     text: {
       propDefinition: [
         common.props.slack,
         "text",
+      ],
+    },
+    mrkdwn: {
+      propDefinition: [
+        common.props.slack,
+        "mrkdwn",
       ],
     },
     username: {
@@ -42,5 +54,6 @@ export default {
       ],
       description: "Optionally provide an image URL to use as the bot icon for this message.",
     },
+    ...common.props,
   },
 };
