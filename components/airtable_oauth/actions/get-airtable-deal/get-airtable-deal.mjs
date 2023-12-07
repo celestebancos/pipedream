@@ -5,7 +5,7 @@ export default {
 	key: "airtable-get-deal-mjs",
 	name: "Get Airtable Deal (New)",
 	description: "Enter a record ID to get a deal from the Airtable Deal Tracker base. All sub-records (e.g. HP PO, Shipment) will be returned as well.",
-	version: "0.0.13",
+	version: "0.0.14",
 	type: "action",
 	props: {
 		...common.props,
@@ -28,7 +28,7 @@ export default {
 	},
 	async run({ $ }) {
 		const airtable = this.airtable
-		const AIRTABLE_RATE_LIMIT_DELAY = 250 //milliseconds — Airtable API allows 5 requests per second
+		const AIRTABLE_RATE_LIMIT_DELAY = 300 //milliseconds — Airtable API allows 5 requests per second
 		airtable.validateRecordID(this.recordId);
 		// const base = this.airtable.base(this.baseId);
 		const baseId = this.baseId?.value ?? this.baseId;
