@@ -5,7 +5,7 @@ export default {
 	key: "airtable-get-deal-mjs",
 	name: "Get Airtable Deal (New)",
 	description: "Enter a record ID to get a deal from the Airtable Deal Tracker base. All sub-records (e.g. HP PO, Shipment) will be returned as well.",
-	version: "0.0.14",
+	version: "0.0.15",
 	type: "action",
 	props: {
 		...common.props,
@@ -91,7 +91,7 @@ export default {
 			return table.id
 		}
 
-		async function get_record_async(table, id){
+		async function get_record_async(table, id, first_try = true){
 			// console.log(`Getting ${table} record with id ${id}`)
 			if(id){
 				try{
@@ -107,7 +107,14 @@ export default {
 					return record.fields
 				} catch(ex){
 					console.log(ex.message)
-					return null
+					console.log('first_try: ', first_try)
+					if(error === 'RATE_LIMIT_REACHED' && first_try){
+						console.log('Waiting a little bit and trying again')
+						await new Promise(resolve => setTimeout(resolve, AIRTABLE_RATE_LIMIT_DELAY))
+						return await get_record_async(table, id, false)
+					} else {
+						throw new Error(ex)
+					}
 				}
 			} else {
 				return null
