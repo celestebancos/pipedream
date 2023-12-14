@@ -1,13 +1,13 @@
-const airtable = require("../../airtable.app.js")
-const common = require("../common.js")
+import airtable from "../../airtable_oauth.app.mjs";
+import common from "../common/common.mjs";
 
-module.exports = {
-	key: 'sync_record',
-	name: 'Sync Record',
+export default {
+	key: 'sync-record',
+	name: 'Sync Record (New)',
 	description: 'Updates a record in Airtable to sync it with a record from an external source. ' + 
 	'If no existing Airtable record matches the source record, a new Airtable record will be created. ' + 
 	'In either case, the matching record will be returned.',
-	version: '0.2.2',
+	version: '0.0.1',
 	type: 'action',
 	props: {
 		...common.props,
@@ -63,7 +63,7 @@ module.exports = {
 			return response[0]._rawJson
 		}
 	},
-	async run(){
+	async run({ $ }) {
 		const existing_records = await this.checkForExistingRecords(this.match_criteria)
 		if(!existing_records || existing_records.length === 0){
 			//create new record if none are found
@@ -77,6 +77,7 @@ module.exports = {
 				}
 			}
 			const updated_record = await this.updateExistingRecord(existing_records[0].id, this.record)
+			$.export("$summary", `Updated record "${existing_records[0].id}"`);
 			return updated_record
 		} else {
 			//throw an error if more than one existing record is found
