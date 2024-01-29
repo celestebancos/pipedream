@@ -19,10 +19,11 @@ config = {
     "openai_api_type": openai_api_type,
     "openai": {
         "api_key": get_env_var("OPENAI_API_KEY", required=openai_api_type == "openai"),
-        "model": get_env_var("OPENAI_MODEL", default="gpt-4-1106-preview"),
+        "model": get_env_var("OPENAI_MODEL", default="gpt-4-0125-preview"),
     },
     "azure": {
         "deployment_name": get_env_var("OPENAI_DEPLOYMENT_NAME", required=openai_api_type == "azure"),
+        "embeddings_deployment_name": get_env_var("OPENAI_EMBEDDINGS_DEPLOYMENT_NAME", required=openai_api_type == "azure"),
         "api_version": get_env_var("OPENAI_API_VERSION", default="2023-05-15"),
         "api_base": get_env_var("OPENAI_API_BASE", required=openai_api_type == "azure"),
         "api_key": get_env_var("OPENAI_API_KEY", required=openai_api_type == "azure"),

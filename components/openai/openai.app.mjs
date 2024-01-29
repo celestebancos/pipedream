@@ -76,6 +76,15 @@ export default {
       type: "string",
       label: "Run ID",
       description: "The unique identifier for the run.",
+      async options({ threadId }) {
+        if (!threadId) {
+          return [];
+        }
+        const { data: runs } = await this.listRuns({
+          threadId,
+        });
+        return runs.map(({ id }) => id);
+      },
     },
     stepId: {
       type: "string",
@@ -222,7 +231,7 @@ export default {
     ttsModel: {
       type: "string",
       label: "Model",
-      description: "One of the available [TTS models](https://platform.openai.com/docs/models/tts).",
+      description: "One of the available [TTS models](https://platform.openai.com/docs/models/tts). `tts-1` is optimized for speed, while `tts-1-hd` is optimized for quality.",
       options: [
         "tts-1",
         "tts-1-hd",
@@ -579,7 +588,7 @@ export default {
       return this._makeRequest({
         path: `/threads/${threadId}/runs/${runId}`,
         headers: this._betaHeaders(),
-        method: "PATCH", // Assuming modification is done via PATCH
+        method: "POST",
         data: opts,
       });
     },

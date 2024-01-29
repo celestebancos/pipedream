@@ -134,7 +134,7 @@ export default defineComponent({
     const file = await $.files.open('pipedream.png').fromUrl('https://res.cloudinary.com/pipedreamin/image/upload/t_logo48x48/v1597038956/docs/HzP2Yhq8_400x400_1_sqhs70.jpg')
 
     // display the uploaded file's URL from the File Store:
-    console.log(await file.toURL())
+    console.log(await file.toUrl())
   },
 })
 ```
@@ -187,12 +187,12 @@ export default defineComponent({
     const readStream = got.stream('https://pdrm.co/logo')
 
     // Populate the file's content from the read stream
-    await $files.open("logo.png").fromReadableStream(readStream)
+    await $.files.open("logo.png").fromReadableStream(readStream)
   },
 })
 ```
 
-:::tip **Recommended** Pass the `contentLength`
+:::tip (Recommended) Pass the contentLength if possible
 
 If possible, pass a `contentLength` argument, then File Store will be able to efficiently stream to use less memory. Without a `contentLength` argument, the entire file will need to be downloaded to `/tmp/` until it can be uploaded to the File store.
 
@@ -208,12 +208,15 @@ File Stores live in cloud storage by default, but files can be downloaded to you
 First open a new file at a specific path in the File Store, and then call the `toFile()` method to download the file to the given path:
 
 ```javascript
+import fs from 'fs';
+
 export default defineComponent({
   async run({ steps, $ }) {
     // Download a file from the File Store to the local /tmp/ directory
-    const file = await $.files.open('recording.mp3').toFile('/tmp/recording.mp3')
+    const file = await $.files.open('recording.mp3').toFile('/tmp/README.md')
 
-    console.log(file.url)
+    // read the file version of the file stored in /tmp
+    return (await fs.promises.readFile('/tmp/README.md')).toString()
   },
 })
 ```
